@@ -2,6 +2,8 @@ use argh::FromArgs;
 use std::io;
 use std::process::Command;
 
+const CURRENT_FLAKE: &str = ".";
+
 #[derive(FromArgs, Debug)]
 /// Application configuration
 struct Config {
@@ -10,7 +12,7 @@ struct Config {
     verbose: bool,
 
     /// flake URL or github URL
-    #[argh(positional, default = r#" ".".to_string() "#)]
+    #[argh(positional, default = "CURRENT_FLAKE.to_string()")]
     url: String,
 }
 
@@ -20,8 +22,15 @@ fn main() -> io::Result<()> {
         println!("DEBUG {cfg:?}");
     }
     println!("Running nixci on {}", cfg.url.to_string());
-    let c = Command::new("devour-flake").arg(cfg.url).spawn()?;
-    let output = c.wait_with_output()?;
-    println!("\noutput: {:?}", output);
-    Ok(())
+    let output = Command::new("devour-flake")
+        .arg(cfg.url)
+        .spawn()?
+        .wait_with_output()?;
+    if output.status.success() {
+        println!("\n"); // devour-flake doesn't end in a newline.
+        Ok(())
+    } else {
+        println!("\nERROR: devour-flake failed");
+        std::process::exit(output.status.code().unwrap_or(1));
+    }
 }
