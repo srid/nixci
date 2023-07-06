@@ -25,13 +25,13 @@
       perSystem = { config, self', pkgs, lib, system, ... }: {
         # Rust project definition
         # cf. https://github.com/nix-community/dream2nix
-        dream2nix.inputs."rust-nix-template" = {
+        dream2nix.inputs."nixci" = {
           source = lib.sourceFilesBySuffices ./. [
             ".rs"
             "Cargo.toml"
             "Cargo.lock"
           ];
-          projects."rust-nix-template" = { name, ... }: {
+          projects."nixci" = { name, ... }: {
             inherit name;
             subsystem = "rust";
             translator = "cargo-lock";
@@ -39,10 +39,10 @@
         };
 
         # Flake outputs
-        packages = config.dream2nix.outputs.rust-nix-template.packages;
+        packages = config.dream2nix.outputs.nixci.packages;
         devShells.default = pkgs.mkShell {
           inputsFrom = [
-            config.dream2nix.outputs.rust-nix-template.devShells.default
+            config.dream2nix.outputs.nixci.devShells.default
             config.treefmt.build.devShell
             config.mission-control.devShell
             config.flake-root.devShell
