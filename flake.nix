@@ -11,6 +11,10 @@
     treefmt-nix.url = "github:numtide/treefmt-nix";
     mission-control.url = "github:Platonic-Systems/mission-control";
     flake-root.url = "github:srid/flake-root";
+
+    # App dependenciues
+    devour-flake.url = "github:srid/devour-flake";
+    devour-flake.flake = false;
   };
 
   outputs = inputs:
@@ -23,6 +27,15 @@
         inputs.flake-root.flakeModule
       ];
       perSystem = { config, self', pkgs, lib, system, ... }: {
+        _module.args.pkgs = import inputs.nixpkgs {
+          inherit system;
+          overlays = [
+            (self: super: {
+              devour-flake = self.callPackage inputs.devour-flake { };
+            })
+          ];
+        };
+
         # Rust project definition
         # cf. https://github.com/nix-community/dream2nix
         dream2nix.inputs."nixci" = {
@@ -39,7 +52,11 @@
         };
 
         # Flake outputs
-        packages = config.dream2nix.outputs.nixci.packages;
+        packages.default =
+          let nixci = config.dream2nix.outputs.nixci.packages.nixci;
+          in nixci.overrideAttrs (old: {
+            DEVOUR_FLAKE = lib.getExe pkgs.devour-flake;
+          });
         devShells.default = pkgs.mkShell {
           inputsFrom = [
             config.dream2nix.outputs.nixci.devShells.default
@@ -50,10 +67,12 @@
           shellHook = ''
             # For rust-analyzer 'hover' tooltips to work.
             export RUST_SRC_PATH=${pkgs.rustPlatform.rustLibSrc}
+            export DEVOUR_FLAKE=${lib.getExe pkgs.devour-flake}
           '';
           nativeBuildInputs = [
             pkgs.cargo-watch
             pkgs.rust-analyzer
+            pkgs.devour-flake
           ];
         };
 

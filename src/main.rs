@@ -3,6 +3,8 @@ use std::process::{Command, Stdio};
 
 const CURRENT_FLAKE: &str = ".";
 
+const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
+
 #[derive(FromArgs, Debug)]
 /// Application configuration
 struct Config {
@@ -24,7 +26,7 @@ fn main() -> AppResult<()> {
         println!("DEBUG {cfg:?}");
     }
     println!("Running nixci on {}", cfg.url.to_string());
-    let output = Command::new("devour-flake")
+    let output = Command::new(DEVOUR_FLAKE)
         .arg(cfg.url)
         .stdout(Stdio::piped())
         .spawn()?

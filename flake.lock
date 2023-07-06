@@ -34,6 +34,22 @@
         "type": "github"
       }
     },
+    "devour-flake": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1688415872,
+        "narHash": "sha256-lsFVQODpaVtGVjFC6D1yAFECOhkNfejXJ7SwhxkzYck=",
+        "owner": "srid",
+        "repo": "devour-flake",
+        "rev": "06e1ccbd53517c457cf33e0d7de95fea693bfb11",
+        "type": "github"
+      },
+      "original": {
+        "owner": "srid",
+        "repo": "devour-flake",
+        "type": "github"
+      }
+    },
     "devshell": {
       "flake": false,
       "locked": {
@@ -416,6 +432,7 @@
     },
     "root": {
       "inputs": {
+        "devour-flake": "devour-flake",
         "dream2nix": "dream2nix",
         "flake-parts": "flake-parts_2",
         "flake-root": "flake-root",
