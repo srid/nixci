@@ -85,7 +85,7 @@
           watch = {
             exec = ''
               set -x
-              cargo watch -x "run -- $*"
+              cargo watch -x "run -- github:srid/haskell-template"
             '';
             description = "Watch for changes and run the project executable";
           };
