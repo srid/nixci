@@ -21,6 +21,7 @@
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       systems = import inputs.systems;
       imports = [
+        inputs.flake-parts.flakeModules.easyOverlay
         inputs.dream2nix.flakeModuleBeta
         inputs.treefmt-nix.flakeModule
         inputs.mission-control.flakeModule
@@ -57,6 +58,8 @@
           in nixci.overrideAttrs (old: {
             DEVOUR_FLAKE = lib.getExe pkgs.devour-flake;
           });
+        overlayAttrs.default = self'.packages.default;
+
         devShells.default = pkgs.mkShell {
           inputsFrom = [
             config.dream2nix.outputs.nixci.devShells.default
