@@ -58,7 +58,7 @@
           in nixci.overrideAttrs (old: {
             DEVOUR_FLAKE = lib.getExe pkgs.devour-flake;
           });
-        overlayAttrs.default = self'.packages.default;
+        overlayAttrs.nixci = self'.packages.default;
 
         devShells.default = pkgs.mkShell {
           inputsFrom = [
