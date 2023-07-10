@@ -13,6 +13,3 @@ pub struct Config {
     #[argh(positional, default = "CURRENT_FLAKE_URL.to_string()")]
     pub url: String,
 }
-
-pub type AppError = Box<dyn std::error::Error>;
-pub type AppResult<T> = Result<T, AppError>;
