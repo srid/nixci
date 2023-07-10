@@ -1,29 +1,17 @@
-use std::process::{Command, Stdio};
+mod app;
+mod devour_flake;
 
-mod cli;
 
-/// Absolute path to the devour-flake executable
-///
-/// We expect this environment to be set in Nix build and shell.
-const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
-
-type AppError = Box<dyn std::error::Error>;
-type AppResult<T> = Result<T, AppError>;
-
-fn main() -> AppResult<()> {
+fn main() -> app::AppResult<()> {
     // TODO: Subflake support: parse `.envrc`? Or `nixci.json`?
-    let cfg = argh::from_env::<cli::Config>();
+    let cfg = argh::from_env::<app::Config>();
     if cfg.verbose {
         println!("DEBUG {cfg:?}");
     }
     // TODO: Handle github urls, in particular PR urls
     println!("Running nixci on {}", cfg.url.to_string());
     // TODO: Run `nix flake lock --no-update-lock-file` and report on it.
-    let output = Command::new(DEVOUR_FLAKE)
-        .arg(cfg.url)
-        .stdout(Stdio::piped())
-        .spawn()?
-        .wait_with_output()?;
+    let output = devour_flake::devour_flake(cfg.url)?;
     if output.status.success() {
         // TODO: Strip devour-flake's follows-logging output
         let raw_output = String::from_utf8(output.stdout)?;
