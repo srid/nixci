@@ -1,7 +1,7 @@
 mod app;
 mod devour_flake;
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 
 fn main() -> Result<()> {
     // TODO: Subflake support: parse `.envrc`? Or `nixci.json`?

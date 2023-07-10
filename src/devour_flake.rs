@@ -1,6 +1,6 @@
+use anyhow::{bail, Context, Result};
 /// Rust support for invoking https://github.com/srid/devour-flake
 use std::process::{Command, Stdio};
-use anyhow::{Result, Context, bail};
 
 /// Absolute path to the devour-flake executable
 ///
@@ -9,14 +9,16 @@ const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
 pub type DrvOut = String;
 
-
 pub fn devour_flake(url: String) -> Result<Vec<DrvOut>> {
-    // TODO: Strip devour-flake's follows-logging output
+    // TODO: Strip devour-flake's follows-logging output from stderr
+    //
+    // What is the best way to achieve this?
     let output = Command::new(DEVOUR_FLAKE)
         .arg(url)
         .stdout(Stdio::piped())
         .spawn()?
-        .wait_with_output()?;
+        .wait_with_output()
+        .with_context(|| "Unable to spawn devour-flake process")?;
     if output.status.success() {
         parse_devour_flake_output(output.stdout)
     } else {
