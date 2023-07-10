@@ -1,30 +1,18 @@
-use argh::FromArgs;
 use std::process::{Command, Stdio};
 
-const CURRENT_FLAKE_URL: &str = ".";
+mod cli;
 
 /// Absolute path to the devour-flake executable
 ///
 /// We expect this environment to be set in Nix build and shell.
 const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
-#[derive(FromArgs, Debug)]
-/// Application configuration
-struct Config {
-    /// whether to be verbose
-    #[argh(switch, short = 'v')]
-    verbose: bool,
-
-    /// flake URL or github URL
-    #[argh(positional, default = "CURRENT_FLAKE_URL.to_string()")]
-    url: String,
-}
-
 type AppError = Box<dyn std::error::Error>;
 type AppResult<T> = Result<T, AppError>;
 
 fn main() -> AppResult<()> {
-    let cfg = argh::from_env::<Config>();
+    // TODO: Subflake support: parse `.envrc`? Or `nixci.json`?
+    let cfg = argh::from_env::<cli::Config>();
     if cfg.verbose {
         println!("DEBUG {cfg:?}");
     }
