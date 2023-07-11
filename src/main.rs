@@ -1,11 +1,11 @@
-mod app;
+mod cli;
 mod config;
-mod devour_flake;
+mod nix;
 
 use anyhow::{bail, Result};
 
 fn main() -> Result<()> {
-    let args = argh::from_env::<app::CliArgs>();
+    let args = argh::from_env::<cli::CliArgs>();
     if args.verbose {
         println!("DEBUG {args:?}");
     }
@@ -23,7 +23,7 @@ fn main() -> Result<()> {
         let nix_args = cfg.build_nix_build_args_for_flake(args.url.clone());
         println!("extra_args: {nix_args:?}");
 
-        let outs = devour_flake::devour_flake(nix_args)?;
+        let outs = nix::devour_flake::devour_flake(nix_args)?;
         if outs.len() == 0 {
             bail!("No outputs produced by devour-flake")
         } else {
