@@ -51,6 +51,21 @@
             subsystem = "rust";
             translator = "cargo-lock";
           };
+          packageOverrides =
+            let
+              common = {
+                add-deps = with pkgs; with pkgs.darwin.apple_sdk.frameworks; {
+                  nativeBuildInputs = old: old ++ lib.optionals stdenv.isDarwin [
+                    libiconv
+                  ];
+                };
+              };
+            in
+            {
+              # Project and dependency overrides:
+              nixci = common // { };
+              nixci-deps = common;
+            };
         };
 
         # Flake outputs

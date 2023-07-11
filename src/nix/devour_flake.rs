@@ -1,6 +1,11 @@
 use anyhow::{bail, Context, Result};
+use colored::Colorize;
 /// Rust support for invoking https://github.com/srid/devour-flake
-use std::process::{Command, Stdio};
+use std::process::Stdio;
+use tokio::{
+    io::{AsyncBufReadExt, BufReader},
+    process::Command,
+};
 
 /// Absolute path to the devour-flake executable
 ///
@@ -9,18 +14,35 @@ const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
 pub type DrvOut = String;
 
-pub fn devour_flake(args: Vec<String>) -> Result<Vec<DrvOut>> {
-    // TODO: Strip devour-flake's follows-logging output from stderr
-    //
-    // What is the best way to achieve this?
-    let output = Command::new(DEVOUR_FLAKE)
+#[tokio::main]
+pub async fn devour_flake(args: Vec<String>) -> Result<Vec<DrvOut>> {
+    // TODO: Strip devour-flake's "follows" output from stderr
+    let mut output_fut = Command::new(DEVOUR_FLAKE)
         .args(args)
         .stdout(Stdio::piped())
-        .spawn()?
+        .stderr(Stdio::piped())
+        .spawn()?;
+    let stderr_handle = output_fut.stderr.take().unwrap();
+    tokio::spawn(async move {
+        let mut reader = BufReader::new(stderr_handle).lines();
+        while let Some(line) = reader.next_line().await.expect("read stderr") {
+            // TODO: Do this unless verbose
+            if line.starts_with("• Added input") {
+                // Consume the input logging itself
+                reader.next_line().await.expect("read stderr");
+                continue;
+            } else if line.starts_with("warning: not writing modified lock file of flake") {
+                continue;
+            }
+            println!("  [devour-flake]: {}", line.cyan());
+        }
+    });
+    let output = output_fut
         .wait_with_output()
+        .await
         .with_context(|| "Unable to spawn devour-flake process")?;
     if output.status.success() {
-        parse_devour_flake_output(output.stdout)
+        parse_devour_flake_output(output.stdout.clone())
     } else {
         let exit_code = output.status.code().unwrap_or(1);
         bail!("devour-flake failed to run (exited: {})", exit_code);

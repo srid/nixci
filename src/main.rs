@@ -3,6 +3,7 @@ mod config;
 mod nix;
 
 use anyhow::{bail, Result};
+use colored::Colorize;
 
 fn main() -> Result<()> {
     let args = argh::from_env::<cli::CliArgs>();
@@ -19,22 +20,20 @@ fn main() -> Result<()> {
         println!("DEBUG {cfgs:?}");
     }
     for (cfg_name, cfg) in &cfgs.0 {
-        println!("FLAKE: {}", cfg_name);
         let nix_args = cfg.nix_build_args_for_flake(args.url.clone());
-        println!("extra_args: {nix_args:?}");
+        println!(
+            "{}",
+            format!("> FLAKE[{}] devour-flake {}", cfg_name, nix_args.join(" ")).blue()
+        );
 
         let outs = nix::devour_flake::devour_flake(nix_args)?;
         if outs.len() == 0 {
             bail!("No outputs produced by devour-flake")
         } else {
             for out in outs {
-                println!("out: {}", out);
+                println!("{}", out.green().bold());
             }
         }
-    }
-    println!("Finished building flakes:");
-    for (cfg_name, _) in &cfgs.0 {
-        println!("FLAKE: {}", cfg_name);
     }
     Ok(())
 }
