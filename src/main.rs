@@ -19,12 +19,13 @@ fn main() -> Result<()> {
 
     for (_cfg_name, cfg) in &cfgs.0 {
         let nix_args = cfg.nix_build_args_for_flake(&args.url, args.rebuild);
+        println!("🍎");
         if cfg.override_inputs.is_empty() {
             nix::lock::nix_flake_lock_check(&cfg.sub_flake_url(&args.url))?;
         }
         println!(
             "{}",
-            format!("🔨 devour-flake {}", nix_args.join(" "))
+            format!("> devour-flake {}", nix_args.join(" "))
                 .blue()
                 .bold()
         );

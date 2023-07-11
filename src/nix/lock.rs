@@ -6,7 +6,7 @@ use anyhow::{bail, Result};
 pub fn nix_flake_lock_check(url: &String) -> Result<()> {
     println!(
         "{}",
-        format!("🧷 nix flake lock --no-update-lock-file {}", url)
+        format!("> nix flake lock --no-update-lock-file {}", url)
             .blue()
             .bold()
     );

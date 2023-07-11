@@ -36,7 +36,7 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut
                     continue;
                 }
             }
-            println!("    {}", line.truecolor(120, 120, 120));
+            println!("{}", line.truecolor(120, 120, 120));
         }
     });
     let output = output_fut
