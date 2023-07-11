@@ -18,24 +18,12 @@ fn main() -> Result<()> {
     if args.verbose {
         println!("DEBUG {cfgs:?}");
     }
-    for (cfg_name, cfg) in cfgs.0 {
+    for (cfg_name, cfg) in &cfgs.0 {
         println!("FLAKE: {}", cfg_name);
-        // TODO: override inputs
-        let flake_url = format!("{}?dir={}", args.url, cfg.dir);
-        let extra_args = cfg
-            .override_inputs
-            .iter()
-            .flat_map(|(k, v)| {
-                [
-                    "--override-input".to_string(),
-                    format!("flake/{}", k),
-                    v.to_string(),
-                ]
-            })
-            .collect::<Vec<String>>();
-        println!("extra_args: {extra_args:?}");
+        let nix_args = cfg.build_nix_build_args_for_flake(args.url.clone());
+        println!("extra_args: {nix_args:?}");
 
-        let outs = devour_flake::devour_flake(flake_url, extra_args)?;
+        let outs = devour_flake::devour_flake(nix_args)?;
         if outs.len() == 0 {
             bail!("No outputs produced by devour-flake")
         } else {
@@ -43,6 +31,10 @@ fn main() -> Result<()> {
                 println!("out: {}", out);
             }
         }
+    }
+    println!("Finished building flakes:");
+    for (cfg_name, _) in &cfgs.0 {
+        println!("FLAKE: {}", cfg_name);
     }
     Ok(())
 }

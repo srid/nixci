@@ -9,15 +9,12 @@ const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
 pub type DrvOut = String;
 
-pub fn devour_flake(url: String, args: Vec<String>) -> Result<Vec<DrvOut>> {
+pub fn devour_flake(args: Vec<String>) -> Result<Vec<DrvOut>> {
     // TODO: Strip devour-flake's follows-logging output from stderr
     //
     // What is the best way to achieve this?
-    let mut args_ = args.clone();
-    args_.insert(0, url);
-    println!("args_: {args_:?}");
     let output = Command::new(DEVOUR_FLAKE)
-        .args(args_)
+        .args(args)
         .stdout(Stdio::piped())
         .spawn()?
         .wait_with_output()

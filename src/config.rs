@@ -45,6 +45,30 @@ impl Default for SubFlakish {
     }
 }
 
+impl SubFlakish {
+    /// Return the `nix build` arguments for building all the outputs in this
+    /// subflake configuration.
+    pub fn build_nix_build_args_for_flake(&self, flake_url: String) -> Vec<String> {
+        let sub_flake_url = format!("{}?dir={}", flake_url, self.dir);
+        let mut extra_args = self
+            .override_inputs
+            .iter()
+            .flat_map(|(k, v)| {
+                [
+                    "--override-input".to_string(),
+                    // We must prefix the input with "flake" because
+                    // devour-flake uses that input name to refer to the user's
+                    // flake.
+                    format!("flake/{}", k),
+                    v.to_string(),
+                ]
+            })
+            .collect::<Vec<String>>();
+        extra_args.insert(0, sub_flake_url);
+        extra_args
+    }
+}
+
 impl Config {
     pub fn from_flake_url(url: String) -> Result<Self> {
         nix_eval_attr_json::<Config>("nixci", url)
