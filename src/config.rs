@@ -33,20 +33,26 @@ impl Config {
     }
 }
 
-/// Not really a subflake, but it depends on "follows" on project root.
+/// Represents a sub-flake look-alike.
+///
+/// "Look-alike" because its inputs may be partial, thus requiring explicit
+/// --override-inputs when evaluating the flake.
 #[derive(Debug, Deserialize)]
 pub struct SubFlakish {
+    /// Subdirectory in which the flake lives
     pub dir: String,
 
+    /// Inputs to override (via --override-input)
     #[serde(rename = "overrideInputs", default)]
     pub override_inputs: HashMap<String, String>,
 }
 
 impl Default for SubFlakish {
+    /// The default `SubFlakish` is the root flake.
     fn default() -> Self {
         SubFlakish {
             dir: ".".to_string(),
-            override_inputs: HashMap::new(),
+            override_inputs: HashMap::default(),
         }
     }
 }
@@ -54,7 +60,7 @@ impl Default for SubFlakish {
 impl SubFlakish {
     /// Return the `nix build` arguments for building all the outputs in this
     /// subflake configuration.
-    pub fn build_nix_build_args_for_flake(&self, flake_url: String) -> Vec<String> {
+    pub fn nix_build_args_for_flake(&self, flake_url: String) -> Vec<String> {
         let sub_flake_url = format!("{}?dir={}", flake_url, self.dir);
         let mut extra_args = self
             .override_inputs

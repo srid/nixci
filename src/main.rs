@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     }
     for (cfg_name, cfg) in &cfgs.0 {
         println!("FLAKE: {}", cfg_name);
-        let nix_args = cfg.build_nix_build_args_for_flake(args.url.clone());
+        let nix_args = cfg.nix_build_args_for_flake(args.url.clone());
         println!("extra_args: {nix_args:?}");
 
         let outs = nix::devour_flake::devour_flake(nix_args)?;
