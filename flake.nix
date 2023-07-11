@@ -28,22 +28,6 @@
         inputs.flake-root.flakeModule
       ];
 
-      flake = {
-        # `nixci --flake-dir` will override this.
-        # 
-        # So, in this order:
-        # - CLI
-        # - flake attr
-        # - defaults
-        nixci = {
-          flakeDir = "dev";
-          overrideInputs = {
-            "haskell-flake" = ".";
-            "example" = "./example";
-          };
-        };
-      };
-
       perSystem = { config, self', pkgs, lib, system, ... }: {
         _module.args.pkgs = import inputs.nixpkgs {
           inherit system;
