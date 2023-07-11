@@ -5,5 +5,8 @@
     "editor.inlayHints.enabled": "offUnlessPressed",
     "[rust]": {
         "editor.defaultFormatter": "statiolake.vscode-rustfmt"
-    }
+    },
+    "rust-analyzer.linkedProjects": [
+        "./Cargo.toml"
+    ]
 }
