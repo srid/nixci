@@ -26,7 +26,7 @@ fn main() -> Result<()> {
         }
         println!(
             "{}",
-            format!("❄️ devour-flake {}", nix_args.join(" "))
+            format!("🔨 devour-flake {}", nix_args.join(" "))
                 .blue()
                 .bold()
         );
