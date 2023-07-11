@@ -31,12 +31,12 @@ fn main() -> Result<()> {
                 .bold()
         );
 
-        let outs = nix::devour_flake::devour_flake(nix_args)?;
+        let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
         if outs.len() == 0 {
             bail!("No outputs produced by devour-flake")
         } else {
             for out in outs {
-                println!("  {}", out.green().bold());
+                println!("  {}", out.0.green().bold());
             }
         }
     }

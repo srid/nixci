@@ -12,10 +12,11 @@ use tokio::{
 /// We expect this environment to be set in Nix build and shell.
 const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
-pub type DrvOut = String;
+/// Nix derivation output path
+pub struct DrvOut(pub String);
 
 #[tokio::main]
-pub async fn devour_flake(args: Vec<String>) -> Result<Vec<DrvOut>> {
+pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut>> {
     // TODO: Strip devour-flake's "follows" output from stderr
     let mut output_fut = Command::new(DEVOUR_FLAKE)
         .args(args)
@@ -26,13 +27,14 @@ pub async fn devour_flake(args: Vec<String>) -> Result<Vec<DrvOut>> {
     tokio::spawn(async move {
         let mut reader = BufReader::new(stderr_handle).lines();
         while let Some(line) = reader.next_line().await.expect("read stderr") {
-            // TODO: Do this unless verbose
-            if line.starts_with("• Added input") {
-                // Consume the input logging itself
-                reader.next_line().await.expect("read stderr");
-                continue;
-            } else if line.starts_with("warning: not writing modified lock file of flake") {
-                continue;
+            if !verbose {
+                if line.starts_with("• Added input") {
+                    // Consume the input logging itself
+                    reader.next_line().await.expect("read stderr");
+                    continue;
+                } else if line.starts_with("warning: not writing modified lock file of flake") {
+                    continue;
+                }
             }
             println!("    {}", line.cyan());
         }
@@ -59,6 +61,6 @@ fn parse_devour_flake_output(stdout: Vec<u8>) -> Result<Vec<DrvOut>> {
     if outs.clone().count() == 0 {
         bail!("devour-flake produced no outputs (the flake has none?)");
     } else {
-        Ok(outs.map(|s| s.to_string()).collect())
+        Ok(outs.map(|s| DrvOut(s.to_string())).collect())
     }
 }
