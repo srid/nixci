@@ -6,6 +6,8 @@ const CURRENT_FLAKE_URL: &str = ".";
 /// Application configuration
 pub struct CliArgs {
     /// whether to be verbose
+    ///
+    /// If enabled, also the full nix command output it shown.
     #[argh(switch, short = 'v')]
     pub verbose: bool,
 
