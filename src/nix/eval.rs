@@ -11,7 +11,6 @@ where
     T: Default + serde::de::DeserializeOwned,
 {
     let output = Command::new("nix")
-        .arg("--refresh")
         .arg("eval")
         .arg(format!("{}#{}", url, attr))
         .arg("--json")
