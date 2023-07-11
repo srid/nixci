@@ -27,6 +27,23 @@
         inputs.mission-control.flakeModule
         inputs.flake-root.flakeModule
       ];
+
+      flake = {
+        # `nixci --flake-dir` will override this.
+        # 
+        # So, in this order:
+        # - CLI
+        # - flake attr
+        # - defaults
+        nixci = {
+          flakeDir = "dev";
+          overrideInputs = {
+            "haskell-flake" = ".";
+            "example" = "./example";
+          };
+        };
+      };
+
       perSystem = { config, self', pkgs, lib, system, ... }: {
         _module.args.pkgs = import inputs.nixpkgs {
           inherit system;
@@ -107,7 +124,7 @@
           watch = {
             exec = ''
               set -x
-              cargo watch -x "run -- github:srid/haskell-template"
+              cargo watch -x "run -- github:juspay/services-flake/nixci"
             '';
             description = "Watch for changes and run the project executable";
           };

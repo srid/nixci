@@ -4,7 +4,7 @@ const CURRENT_FLAKE_URL: &str = ".";
 
 #[derive(FromArgs, Debug)]
 /// Application configuration
-pub struct Config {
+pub struct CliArgs {
     /// whether to be verbose
     #[argh(switch, short = 'v')]
     pub verbose: bool,
