@@ -7,17 +7,24 @@ use tokio::{
     process::Command,
 };
 
+use super::util::build_shell_command;
+
 /// Absolute path to the devour-flake executable
 ///
 /// We expect this environment to be set in Nix build and shell.
-const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
+pub const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
 /// Nix derivation output path
 pub struct DrvOut(pub String);
 
 #[tokio::main]
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut>> {
-    // TODO: Strip devour-flake's "follows" output from stderr
+    println!(
+        "> {}",
+        build_shell_command(DEVOUR_FLAKE.to_owned(), &args)
+            .blue()
+            .bold()
+    );
     let mut output_fut = Command::new(DEVOUR_FLAKE)
         .args(args)
         .stdout(Stdio::piped())
@@ -36,7 +43,7 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut
                     continue;
                 }
             }
-            println!("{}", line.truecolor(120, 120, 120));
+            println!("{}", line);
         }
     });
     let output = output_fut

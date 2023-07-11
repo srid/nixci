@@ -23,12 +23,6 @@ fn main() -> Result<()> {
         if cfg.override_inputs.is_empty() {
             nix::lock::nix_flake_lock_check(&cfg.sub_flake_url(&args.url))?;
         }
-        println!(
-            "{}",
-            format!("> devour-flake {}", nix_args.join(" "))
-                .blue()
-                .bold()
-        );
 
         let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
         if outs.len() == 0 {
