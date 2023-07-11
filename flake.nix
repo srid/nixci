@@ -124,7 +124,7 @@
             exec = ''
               set -x
               url="''${1:-github:juspay/services-flake}"
-              cargo watch -x "run -- $url"
+              cargo watch -x "run -- --rebuild $url"
             '';
             description = "Watch for changes and run the project executable";
           };

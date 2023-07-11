@@ -60,7 +60,7 @@ impl Default for SubFlakish {
 impl SubFlakish {
     /// Return the `nix build` arguments for building all the outputs in this
     /// subflake configuration.
-    pub fn nix_build_args_for_flake(&self, flake_url: String) -> Vec<String> {
+    pub fn nix_build_args_for_flake(&self, flake_url: String, rebuild: bool) -> Vec<String> {
         let sub_flake_url = format!("{}?dir={}", flake_url, self.dir);
         let mut extra_args = self
             .override_inputs
@@ -76,6 +76,9 @@ impl SubFlakish {
                 ]
             })
             .collect::<Vec<String>>();
+        if rebuild {
+            extra_args.push("--rebuild".to_string());
+        }
         extra_args.insert(0, sub_flake_url);
         extra_args
     }

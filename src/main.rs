@@ -18,7 +18,7 @@ fn main() -> Result<()> {
         println!("DEBUG {cfgs:?}");
     }
     for (_cfg_name, cfg) in &cfgs.0 {
-        let nix_args = cfg.nix_build_args_for_flake(args.url.clone());
+        let nix_args = cfg.nix_build_args_for_flake(args.url.clone(), args.rebuild);
         println!(
             "{}",
             format!("❄️ devour-flake {}", nix_args.join(" "))

@@ -9,6 +9,10 @@ pub struct CliArgs {
     #[argh(switch, short = 'v')]
     pub verbose: bool,
 
+    /// whether to pass --rebuild to nix
+    #[argh(switch)]
+    pub rebuild: bool,
+
     /// flake URL or github URL
     #[argh(positional, default = "CURRENT_FLAKE_URL.to_string()")]
     pub url: String,
