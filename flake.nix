@@ -108,7 +108,7 @@
           watch = {
             exec = ''
               set -x
-              cargo watch -x "run -- github:juspay/services-flake/nixci"
+              cargo watch -x "run -- github:juspay/services-flake"
             '';
             description = "Watch for changes and run the project executable";
           };
