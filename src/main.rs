@@ -17,8 +17,6 @@ fn main() -> Result<()> {
         println!("DEBUG {cfgs:?}");
     }
 
-    nix::lock::nix_flake_lock_check(&args.url)?;
-
     for (_cfg_name, cfg) in &cfgs.0 {
         let nix_args = cfg.nix_build_args_for_flake(&args.url, args.rebuild);
         if cfg.override_inputs.is_empty() {
@@ -36,7 +34,7 @@ fn main() -> Result<()> {
             bail!("No outputs produced by devour-flake")
         } else {
             for out in outs {
-                println!("  {}", out.0.green().bold());
+                println!("{}", out.0.bold());
             }
         }
     }
