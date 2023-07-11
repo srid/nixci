@@ -31,7 +31,7 @@ fn main() -> Result<()> {
             bail!("No outputs produced by devour-flake")
         } else {
             for out in outs {
-                println!("{}", out.green().bold());
+                println!("  {}", out.green().bold());
             }
         }
     }

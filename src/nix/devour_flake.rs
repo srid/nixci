@@ -34,7 +34,7 @@ pub async fn devour_flake(args: Vec<String>) -> Result<Vec<DrvOut>> {
             } else if line.starts_with("warning: not writing modified lock file of flake") {
                 continue;
             }
-            println!("  [devour-flake]: {}", line.cyan());
+            println!("    {}", line.cyan());
         }
     });
     let output = output_fut
