@@ -60,7 +60,11 @@ impl Default for SubFlakish {
 impl SubFlakish {
     /// Return the flake URL pointing to the sub-flake
     pub fn sub_flake_url(&self, root_flake_url: &String) -> String {
-        format!("{}?dir={}", root_flake_url, self.dir)
+        if self.dir == "." {
+            root_flake_url.clone()
+        } else {
+            format!("{}?dir={}", root_flake_url, self.dir)
+        }
     }
 
     /// Return the `nix build` arguments for building all the outputs in this
