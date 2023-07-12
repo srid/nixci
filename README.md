@@ -17,6 +17,6 @@ In nix shell,
 
 ## TODO
 
-- [ ] Initial stablization
-- [ ] Accept Github PR urls
+- [x] Initial stablization
+- [x] Accept Github PR urls
 - [ ] Sanitize entire console output (debug logging, etc.)
