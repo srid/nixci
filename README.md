@@ -6,6 +6,8 @@
 
 `nixci` builds all outputs in a flake (via [devour-flake]) which can in turn be used in either CI or locally.
 
+<img width="509" alt="image" src="https://github.com/srid/nixci/assets/3998/e0f344d0-af69-4b9a-9972-229140cd7123">
+
 ## Usage
 
 Use `nix run github:srid/nixci` to run `nixci` directly off this repo. Or install it using `nix profile install github:srid/nixci`.
