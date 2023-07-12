@@ -1,5 +1,6 @@
 mod cli;
 mod config;
+mod github;
 mod nix;
 
 use anyhow::{bail, Result};
@@ -10,18 +11,19 @@ fn main() -> Result<()> {
     if args.verbose {
         println!("DEBUG {args:?}");
     }
-    // TODO: Handle github urls, in particular PR urls
+    let url = args.flake_ref.to_flake_url()?;
+    println!("{}", format!("🍏 {}", url).bold());
 
-    let cfgs = config::Config::from_flake_url(args.url.clone())?;
+    let cfgs = config::Config::from_flake_url(url.clone())?;
     if args.verbose {
         println!("DEBUG {cfgs:?}");
     }
 
-    for (_cfg_name, cfg) in &cfgs.0 {
-        let nix_args = cfg.nix_build_args_for_flake(&args.url, args.rebuild);
-        println!("🍎");
+    for (cfg_name, cfg) in &cfgs.0 {
+        let nix_args = cfg.nix_build_args_for_flake(&url, args.rebuild);
+        println!("🍎 {}", cfg_name.italic());
         if cfg.override_inputs.is_empty() {
-            nix::lock::nix_flake_lock_check(&cfg.sub_flake_url(&args.url))?;
+            nix::lock::nix_flake_lock_check(&cfg.sub_flake_url(&url))?;
         }
 
         let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
