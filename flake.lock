@@ -37,11 +37,11 @@
     "devour-flake": {
       "flake": false,
       "locked": {
-        "lastModified": 1689265498,
-        "narHash": "sha256-2N571cI0vlT6gVO1cYqdwqCSdifc7IY467fQWKwHHFk=",
+        "lastModified": 1689266154,
+        "narHash": "sha256-epZ+5PoftyPlb8c5mMaWEqGrSfnI4zju6gCU8sMXW4g=",
         "owner": "srid",
         "repo": "devour-flake",
-        "rev": "f7e645425ccd50a562714a0442d42b0f1a75eab0",
+        "rev": "d70b535bbf64933e73c92be3304fe3c6b19c0540",
         "type": "github"
       },
       "original": {
