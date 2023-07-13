@@ -5,11 +5,11 @@ pipeline {
     stages {
         stage ('Build') {
             steps {
-                nixBuildAll ()
+                nixCI ()
             }
         }
         stage ('Cachix push') {
-            when { branch 'master' }
+            when { branch 'nixci' }
             steps {
                 cachixPush "srid"
             }
