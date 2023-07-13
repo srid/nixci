@@ -6,7 +6,7 @@ use anyhow::{bail, Result};
 use crate::nix::util::build_shell_command;
 
 pub fn nix_flake_lock_check(url: &String) -> Result<()> {
-    println!(
+    eprintln!(
         "> {}",
         build_shell_command(
             "nix".to_string(),

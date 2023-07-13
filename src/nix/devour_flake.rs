@@ -19,7 +19,7 @@ pub struct DrvOut(pub String);
 
 #[tokio::main]
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut>> {
-    println!(
+    eprintln!(
         "> {}",
         build_shell_command(DEVOUR_FLAKE.to_owned(), &args)
             .blue()
@@ -43,7 +43,7 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut
                     continue;
                 }
             }
-            println!("{}", line);
+            eprintln!("{}", line);
         }
     });
     let output = output_fut
