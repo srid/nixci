@@ -1,9 +1,5 @@
 # nixci
 
-> **Note**
->
-> 🚧 Work in Progress
-
 `nixci` builds all outputs in a flake, or optionally its [sub-flakes](https://github.com/hercules-ci/flake-parts/issues/119), which can in turn be used either in CI or locally. It uses [devour-flake].
 
 <img width="509" alt="image" src="https://github.com/srid/nixci/assets/3998/e0f344d0-af69-4b9a-9972-229140cd7123">
@@ -55,6 +51,6 @@ By default, `nixci` will build the top-level flake, but you can tell it to build
 
 - [x] Initial stablization
 - [x] Accept Github PR urls
-- [ ] Sanitize entire console output (debug logging, etc.)
+- [ ] Normalize entire console output in some aggreable fashion
 
 [devour-flake]: https://github.com/srid/devour-flake
