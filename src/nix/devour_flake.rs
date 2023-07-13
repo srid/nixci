@@ -65,9 +65,5 @@ fn parse_devour_flake_output(stdout: Vec<u8>) -> Result<Vec<DrvOut>> {
     let raw_output = String::from_utf8(stdout)
         .with_context(|| format!("Failed to decode devour-flake output as UTF-8"))?;
     let outs = raw_output.split_ascii_whitespace();
-    if outs.clone().count() == 0 {
-        bail!("devour-flake produced no outputs (the flake has none?)");
-    } else {
-        Ok(outs.map(|s| DrvOut(s.to_string())).collect())
-    }
+    Ok(outs.map(|s| DrvOut(s.to_string())).collect())
 }
