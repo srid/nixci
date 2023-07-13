@@ -59,3 +59,7 @@ Some real-world examples of how nixci is used with specific configurations:
 - [ ] Normalize entire console output in some aggreable fashion
 
 [devour-flake]: https://github.com/srid/devour-flake
+
+## See also
+
+- [jenkins-nix-ci](https://github.com/juspay/jenkins-nix-ci) - Jenkins NixOS module that supports `nixci` as a Groovy function
