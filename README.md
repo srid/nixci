@@ -38,7 +38,12 @@ By default, `nixci` will build the top-level flake, but you can tell it to build
 }
 ```
 
-[Here's a real-world example](https://github.com/juspay/services-flake/blob/197fc1c4d07d09f4e01dd935450608c35393b102/flake.nix#L10-L24).
+### Examples
+
+Some real-world examples of how nixci is used with specific configurations:
+
+- [services-flake](https://github.com/juspay/services-flake/blob/197fc1c4d07d09f4e01dd935450608c35393b102/flake.nix#L10-L24)
+- [nixos-flake](https://github.com/srid/nixos-flake/blob/4af32875e7cc6df440c5f5cf93c67af41902768b/flake.nix#L29-L45)
 
 ## What it does
 
