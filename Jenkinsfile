@@ -8,5 +8,11 @@ pipeline {
                 nixBuildAll ()
             }
         }
+        stage ('Cachix push') {
+            when { branch 'master' }
+            steps {
+                cachixPush "srid"
+            }
+        }
     }
 }
