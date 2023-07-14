@@ -1,8 +1,13 @@
 # nixci
 
-`nixci` builds all outputs in a flake, or optionally its [sub-flakes](https://github.com/hercules-ci/flake-parts/issues/119), which can in turn be used either in CI or locally. It uses [devour-flake].
+`nixci` builds all outputs in a flake, or optionally its [sub-flakes](https://github.com/hercules-ci/flake-parts/issues/119), which can in turn be used either in CI or locally. Using [devour-flake] it will automatically build the following outputs:
 
-<img width="509" alt="image" src="https://github.com/srid/nixci/assets/3998/e0f344d0-af69-4b9a-9972-229140cd7123">
+| Type | Output Key |
+| -- | -- |
+| Standard flake outputs | `packages`, `apps`, `checks`, `devShells` |
+| NixOS | `nixosConfigurations.*` |
+| nix-darwin | `darwinConfigurations.*` |
+| home-manager | `legacyPackages.${system}.homeConfigurations.*` |
 
 ## Usage
 
