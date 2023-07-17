@@ -52,7 +52,22 @@ pub struct CliArgs {
     #[argh(switch)]
     pub rebuild: bool,
 
+    /// whether to pass --refresh to nix
+    ///
+    /// Enabled automatically if the argument is a PR.
+    #[argh(switch)]
+    refresh: Option<bool>,
+
     /// flake URL or github URL
     #[argh(positional, default = "FlakeRef::Flake(\".\".to_string())")]
     pub flake_ref: FlakeRef,
+}
+
+impl CliArgs {
+    pub fn refresh(&self) -> bool {
+        self.refresh.unwrap_or(match self.flake_ref {
+            FlakeRef::GithubPR(_) => true,
+            _ => false,
+        })
+    }
 }

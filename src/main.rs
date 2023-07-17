@@ -3,7 +3,7 @@ mod config;
 mod github;
 mod nix;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use colored::Colorize;
 
 fn main() -> Result<()> {
@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     }
 
     for (cfg_name, cfg) in &cfgs.0 {
-        let nix_args = cfg.nix_build_args_for_flake(&url, args.rebuild);
+        let nix_args = cfg.nix_build_args_for_flake(&url, args.rebuild, args.refresh());
         eprintln!("🍎 {}", cfg_name.italic());
         if cfg.override_inputs.is_empty() {
             nix::lock::nix_flake_lock_check(&cfg.sub_flake_url(&url))?;
