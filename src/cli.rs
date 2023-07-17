@@ -60,6 +60,10 @@ pub struct CliArgs {
     #[arg(long)]
     pub no_refresh: bool,
 
+    /// What system to build the Nix expressions for
+    #[arg(long, short)]
+    pub system: Option<String>,
+
     /// Flake URL or github URL
     pub flake_ref: FlakeRef,
 }

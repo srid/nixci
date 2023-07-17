@@ -90,6 +90,16 @@ impl SubFlakish {
         if !cli_args.no_refresh {
             extra_args.push("--refresh".to_string());
         }
+        match &cli_args.system {
+            Some(system) => {
+                extra_args.append(&mut vec![
+                    "--option".to_string(),
+                    "system".to_string(),
+                    system.clone(),
+                ]);
+            }
+            None => (),
+        }
         extra_args.insert(0, self.sub_flake_url(flake_url));
         extra_args
     }
