@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::Result;
 use serde::Deserialize;
 
-use crate::nix;
+use crate::{cli::CliArgs, nix};
 
 /// Rust type for the `nixci` flake output
 ///
@@ -69,12 +69,7 @@ impl SubFlakish {
 
     /// Return the `nix build` arguments for building all the outputs in this
     /// subflake configuration.
-    pub fn nix_build_args_for_flake(
-        &self,
-        flake_url: &String,
-        rebuild: bool,
-        refresh: bool,
-    ) -> Vec<String> {
+    pub fn nix_build_args_for_flake(&self, cli_args: &CliArgs, flake_url: &String) -> Vec<String> {
         let mut extra_args = self
             .override_inputs
             .iter()
@@ -89,10 +84,10 @@ impl SubFlakish {
                 ]
             })
             .collect::<Vec<String>>();
-        if rebuild {
+        if cli_args.rebuild {
             extra_args.push("--rebuild".to_string());
         }
-        if refresh {
+        if !cli_args.no_refresh {
             extra_args.push("--refresh".to_string());
         }
         extra_args.insert(0, self.sub_flake_url(flake_url));
