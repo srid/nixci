@@ -6,7 +6,7 @@ use try_guard::guard;
 use url::{Host, Url};
 
 /// A reference to a Github Pull Request
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PullRequestRef {
     owner: String,
     repo: String,

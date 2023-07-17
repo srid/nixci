@@ -4,10 +4,11 @@ mod github;
 mod nix;
 
 use anyhow::Result;
+use clap::Parser;
 use colored::Colorize;
 
 fn main() -> Result<()> {
-    let args = argh::from_env::<cli::CliArgs>();
+    let args = cli::CliArgs::parse();
     if args.verbose {
         eprintln!("DEBUG {args:?}");
     }
@@ -20,7 +21,7 @@ fn main() -> Result<()> {
     }
 
     for (cfg_name, cfg) in &cfgs.0 {
-        let nix_args = cfg.nix_build_args_for_flake(&url, args.rebuild, args.refresh());
+        let nix_args = cfg.nix_build_args_for_flake(&url, args.rebuild, !args.no_refresh);
         eprintln!("🍎 {}", cfg_name.italic());
         if cfg.override_inputs.is_empty() {
             nix::lock::nix_flake_lock_check(&cfg.sub_flake_url(&url))?;

@@ -1,10 +1,12 @@
+use std::str::FromStr;
+
 use anyhow::Result;
-use argh::{FromArgValue, FromArgs};
+use clap::Parser;
 
 use crate::github::{self, PullRequest, PullRequestRef};
 
 /// A reference to some flake living somewhere
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FlakeRef {
     /// A github PR
     GithubPR(PullRequestRef),
@@ -19,8 +21,9 @@ impl Default for FlakeRef {
     }
 }
 
-impl FromArgValue for FlakeRef {
-    fn from_arg_value(s: &str) -> std::result::Result<FlakeRef, String> {
+impl FromStr for FlakeRef {
+    type Err = String;
+    fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
         let flake_ref = match github::PullRequestRef::from_web_url(&s.to_string()) {
             Some(pr) => FlakeRef::GithubPR(pr),
             None => FlakeRef::Flake(s.to_string()),
@@ -39,35 +42,24 @@ impl FlakeRef {
     }
 }
 
-#[derive(FromArgs, Debug)]
-/// Application configuration
+#[derive(Parser, Debug)]
+#[clap(author = "Sridhar Ratnakumar", version, about)]
+/// nixci - Define and build CI for Nix projects anywhere <https://github.com/srid/nixci>
 pub struct CliArgs {
-    /// whether to be verbose
+    /// Whether to be verbose
     ///
     /// If enabled, also the full nix command output is shown.
-    #[argh(switch, short = 'v')]
+    #[arg(short = 'v')]
     pub verbose: bool,
 
-    /// whether to pass --rebuild to nix
-    #[argh(switch)]
+    /// Whether to pass --rebuild to nix
+    #[arg(long)]
     pub rebuild: bool,
 
-    /// whether to pass --refresh to nix
-    ///
-    /// Enabled automatically if the argument is a PR.
-    #[argh(switch)]
-    refresh: Option<bool>,
+    /// Whether to avoid passing --refresh to nix
+    #[arg(long)]
+    pub no_refresh: bool,
 
-    /// flake URL or github URL
-    #[argh(positional, default = "FlakeRef::Flake(\".\".to_string())")]
+    /// Flake URL or github URL
     pub flake_ref: FlakeRef,
-}
-
-impl CliArgs {
-    pub fn refresh(&self) -> bool {
-        self.refresh.unwrap_or(match self.flake_ref {
-            FlakeRef::GithubPR(_) => true,
-            _ => false,
-        })
-    }
 }
