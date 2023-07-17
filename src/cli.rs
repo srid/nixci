@@ -65,5 +65,6 @@ pub struct CliArgs {
     pub system: Option<String>,
 
     /// Flake URL or github URL
+    #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,
 }
