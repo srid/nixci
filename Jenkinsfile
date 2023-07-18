@@ -9,7 +9,7 @@ pipeline {
             }
         }
         stage ('Cachix push') {
-            when { branch 'nixci' }
+            when { branch 'master' }
             steps {
                 cachixPush "srid"
             }
