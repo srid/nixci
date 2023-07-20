@@ -4,6 +4,11 @@ edition = "2021"
 # If you change the name here, you must also do it in flake.nix (and run `cargo generate-lockfile` afterwards)
 name = "nixci"
 version = "0.1.0"
+license = "AGPL-3.0-only"
+description = "Define and build CI for Nix projects anywhere"
+homepage = "https://github.com/srid/nixci"
+repository = "https://github.com/srid/nixci"
+keywords = ["nix"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,3 +22,8 @@ url = "2.4.0"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 try-guard = "0.2.0"
 clap = { version = "4.3.14", features = ["derive"] }
+
+[profile.release]
+strip = true    # Automatically strip symbols from the binary.
+opt-level = "z" # Optimize for size.
+lto = true
