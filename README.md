@@ -9,9 +9,17 @@
 | nix-darwin | `darwinConfigurations.*` |
 | home-manager | `legacyPackages.${system}.homeConfigurations.*` |
 
+## Install
+
+> **Note** To make use of the binary cache, first run:
+>
+> `nix run nixpkgs#cachix use srid`
+
+To install, run `nix profile install github:srid/nixci`. You can also use use `nix run github:srid/nixci` to run `nixci` directly off this repo without installing it.
+
 ## Usage
 
-Use `nix run github:srid/nixci` to run `nixci` directly off this repo. Or install it using `nix profile install github:srid/nixci`.
+`nixci` accepts any valid [flake URL](https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html#url-like-syntax) or a Github PR URL.
 
 ```sh
 # Run nixci on a local flake (default is $PWD)
