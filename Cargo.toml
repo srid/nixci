@@ -3,8 +3,9 @@ authors = ["Sridhar Ratnakumar <srid@srid.ca>"]
 edition = "2021"
 # If you change the name here, you must also do it in flake.nix (and run `cargo generate-lockfile` afterwards)
 name = "nixci"
-version = "0.1.0"
+version = "0.1.1"
 license = "AGPL-3.0-only"
+readme = "README.md"
 description = "Define and build CI for Nix projects anywhere"
 homepage = "https://github.com/srid/nixci"
 repository = "https://github.com/srid/nixci"
