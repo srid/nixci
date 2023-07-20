@@ -13,7 +13,7 @@
     flake-root.url = "github:srid/flake-root";
 
     # App dependenciues
-    devour-flake.url = "github:srid/devour-flake";
+    devour-flake.url = "github:srid/devour-flake/v2";
     devour-flake.flake = false;
   };
 
@@ -127,8 +127,7 @@
           watch = {
             exec = ''
               set -x
-              url="''${1:-github:juspay/services-flake}"
-              cargo watch -x "run -- $url"
+              cargo watch -x "run -- $*"
             '';
             description = "Watch for changes and run the project executable";
           };
