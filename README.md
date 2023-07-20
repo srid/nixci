@@ -2,12 +2,12 @@
 
 `nixci` builds all outputs in a flake, or optionally its [sub-flakes](https://github.com/hercules-ci/flake-parts/issues/119), which can in turn be used either in CI or locally. Using [devour-flake] it will automatically build the following outputs:
 
-| Type | Output Key |
-| -- | -- |
-| Standard flake outputs | `packages`, `apps`, `checks`, `devShells` |
-| NixOS | `nixosConfigurations.*` |
-| nix-darwin | `darwinConfigurations.*` |
-| home-manager | `legacyPackages.${system}.homeConfigurations.*` |
+| Type                   | Output Key                                      |
+| ---------------------- | ----------------------------------------------- |
+| Standard flake outputs | `packages`, `apps`, `checks`, `devShells`       |
+| NixOS                  | `nixosConfigurations.*`                         |
+| nix-darwin             | `darwinConfigurations.*`                        |
+| home-manager           | `legacyPackages.${system}.homeConfigurations.*` |
 
 ## Install
 
@@ -64,12 +64,6 @@ Some real-world examples of how nixci is used with specific configurations:
 - Checks that `flake.lock` is in sync
 - Runs [devour-flake](https://github.com/srid/devour-flake) to build all flake outputs
 - Prints the built outputs
-
-## TODO
-
-- [x] Initial stablization
-- [x] Accept Github PR urls
-- [ ] Normalize entire console output in some aggreable fashion
 
 [devour-flake]: https://github.com/srid/devour-flake
 
