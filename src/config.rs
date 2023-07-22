@@ -100,6 +100,11 @@ impl SubFlakish {
             }
             None => (),
         }
+
+        // Parallel downloads and builds
+        extra_args.push("-j".to_string());
+        extra_args.push("auto".to_string());
+
         extra_args.insert(0, self.sub_flake_url(flake_url));
         extra_args
     }
