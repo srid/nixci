@@ -42,6 +42,19 @@ $ nixci github:hercules-ci/hercules-ci-agent
 $ nixci https://github.com/srid/emanote/pull/451
 ```
 
+### Using in Github Actions
+
+Add the following to your workflow file,
+
+```yaml
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: yaxitech/nix-install-pkgs-action@v3
+        with:
+          packages: "nixpkgs#nixci"
+      - run: nixci
+```
+
 ## Configuring
 
 By default, `nixci` will build the top-level flake, but you can tell it to build sub-flakes by adding the following output to your top-level flake:
