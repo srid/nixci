@@ -106,6 +106,7 @@ impl SubFlakish {
         extra_args.push("auto".to_string());
 
         extra_args.insert(0, self.sub_flake_url(flake_url));
+        extra_args.extend(cli_args.extra_nix_build_args.iter().cloned());
         extra_args
     }
 }

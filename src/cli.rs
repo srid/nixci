@@ -67,4 +67,8 @@ pub struct CliArgs {
     /// Flake URL or github URL
     #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,
+
+    /// Additional arguments to pass through to `nix build`
+    #[arg(last = true)]
+    pub extra_nix_build_args: Vec<String>,
 }
