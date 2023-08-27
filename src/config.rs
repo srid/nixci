@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use anyhow::Result;
 use serde::Deserialize;
@@ -11,17 +11,19 @@ use crate::{cli::CliArgs, nix};
 /// ```nix
 /// {
 ///   nixci.test = {
-///     flakeDir = "./test";
+///     dir = "./test";
 ///     overrideInputs = { "mymod" = "."; };
 ///   };
 /// }
+// NB: we use BTreeMap instead of HashMap here so that we always iterate
+// configs in a determinitstic (i.e. asciibetical) order
 #[derive(Debug, Deserialize)]
-pub struct Config(pub HashMap<String, SubFlakish>);
+pub struct Config(pub BTreeMap<String, SubFlakish>);
 
 impl Default for Config {
     /// Default value contains a single entry for the root flake.
     fn default() -> Self {
-        let mut m = HashMap::new();
+        let mut m = BTreeMap::new();
         m.insert("root".to_string(), SubFlakish::default());
         Config(m)
     }
