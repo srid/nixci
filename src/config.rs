@@ -84,28 +84,9 @@ impl SubFlakish {
                 ]
             })
             .collect::<Vec<String>>();
-        if cli_args.rebuild {
-            extra_args.push("--rebuild".to_string());
-        }
-        if !cli_args.no_refresh {
-            extra_args.push("--refresh".to_string());
-        }
-        match &cli_args.system {
-            Some(system) => {
-                extra_args.append(&mut vec![
-                    "--option".to_string(),
-                    "system".to_string(),
-                    system.clone(),
-                ]);
-            }
-            None => (),
-        }
-
-        // Parallel downloads and builds
-        extra_args.push("-j".to_string());
-        extra_args.push("auto".to_string());
 
         extra_args.insert(0, self.sub_flake_url(flake_url));
+        extra_args.extend(cli_args.extra_nix_build_args.iter().cloned());
         extra_args
     }
 }
