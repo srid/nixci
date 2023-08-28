@@ -52,23 +52,15 @@ pub struct CliArgs {
     #[arg(short = 'v')]
     pub verbose: bool,
 
-    /// Whether to pass --rebuild to nix
-    #[arg(long)]
-    pub rebuild: bool,
-
-    /// Whether to avoid passing --refresh to nix
-    #[arg(long)]
-    pub no_refresh: bool,
-
-    /// What system to build the Nix expressions for
-    #[arg(long, short)]
-    pub system: Option<String>,
-
     /// Flake URL or github URL
     #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,
 
     /// Additional arguments to pass through to `nix build`
-    #[arg(last = true)]
+    #[arg(last = true, default_values_t = vec![
+        "--refresh".to_string(),
+        "-j".to_string(),
+        "auto".to_string(),
+    ])]
     pub extra_nix_build_args: Vec<String>,
 }
