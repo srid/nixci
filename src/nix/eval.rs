@@ -6,7 +6,7 @@ use anyhow::{bail, Context, Result};
 ///
 /// If the flake does not output the given attribute, use the `Default`
 /// implementation of `T`.
-pub fn nix_eval_attr_json<T>(attr: &str, url: String) -> Result<T>
+pub fn nix_eval_attr_json<T>(attr: &str, url: &str) -> Result<T>
 where
     T: Default + serde::de::DeserializeOwned,
 {

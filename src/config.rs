@@ -30,7 +30,7 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn from_flake_url(url: String) -> Result<Self> {
+    pub fn from_flake_url(url: &str) -> Result<Self> {
         nix::eval::nix_eval_attr_json::<Config>("nixci", url)
     }
 }
