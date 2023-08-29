@@ -10,12 +10,7 @@ pub fn nix_flake_lock_check(url: &String) -> Result<()> {
         "> {}",
         build_shell_command(
             "nix".to_string(),
-            &vec![
-                "flake".to_string(),
-                "lock".to_string(),
-                "--no-update-lock-file".to_string(),
-                url.to_string()
-            ]
+            ["flake", "lock", "--no-update-lock-file", url].into_iter(),
         )
         .blue()
         .bold()

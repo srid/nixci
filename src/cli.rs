@@ -23,7 +23,7 @@ impl Default for FlakeRef {
 impl FromStr for FlakeRef {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
-        let flake_ref = match github::PullRequestRef::from_web_url(&s.to_string()) {
+        let flake_ref = match github::PullRequestRef::from_web_url(s) {
             Some(pr) => FlakeRef::GithubPR(pr),
             None => FlakeRef::Flake(s.to_string()),
         };

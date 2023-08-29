@@ -21,7 +21,7 @@ impl PullRequestRef {
         )
     }
     /// Parse a Github PR URL into its owner, repo, and PR number
-    pub fn from_web_url(url: &String) -> Option<Self> {
+    pub fn from_web_url(url: &str) -> Option<Self> {
         let url = Url::parse(url).ok()?;
         guard!(url.scheme() == "https" && url.host() == Some(Host::Domain("github.com")));
         let paths = url.path_segments().map(|c| c.collect::<Vec<_>>())?;

@@ -21,7 +21,7 @@ pub struct DrvOut(pub String);
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut>> {
     eprintln!(
         "> {}",
-        build_shell_command(DEVOUR_FLAKE.to_owned(), &args)
+        build_shell_command(DEVOUR_FLAKE.to_owned(), args.iter().map(|s| &**s))
             .blue()
             .bold()
     );
