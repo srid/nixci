@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 
 use crate::nix::util::print_shell_command;
 
-pub fn nix_flake_lock_check(url: &String) -> Result<()> {
+pub fn nix_flake_lock_check(url: &str) -> Result<()> {
     print_shell_command(
         "nix",
         ["flake", "lock", "--no-update-lock-file", url].into_iter(),
