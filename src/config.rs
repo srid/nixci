@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use anyhow::Result;
 use serde::Deserialize;
@@ -45,8 +45,10 @@ pub struct SubFlakish {
     pub dir: String,
 
     /// Inputs to override (via --override-input)
+    // NB: we use BTreeMap instead of HashMap here so that we always iterate
+    // inputs in a determinitstic (i.e. asciibetical) order
     #[serde(rename = "overrideInputs", default)]
-    pub override_inputs: HashMap<String, String>,
+    pub override_inputs: BTreeMap<String, String>,
 }
 
 impl Default for SubFlakish {
@@ -54,7 +56,7 @@ impl Default for SubFlakish {
     fn default() -> Self {
         SubFlakish {
             dir: ".".to_string(),
-            override_inputs: HashMap::default(),
+            override_inputs: BTreeMap::default(),
         }
     }
 }
