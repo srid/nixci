@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use anyhow::{bail, Result};
 
@@ -9,15 +9,16 @@ pub fn nix_flake_lock_check(url: &str) -> Result<()> {
         "nix",
         ["flake", "lock", "--no-update-lock-file", url].into_iter(),
     );
-    let output = Command::new("nix")
+    let status = Command::new("nix")
         .args(["flake", "lock", "--no-update-lock-file"])
         .arg(url)
+        .stdin(Stdio::null())
         .spawn()?
-        .wait_with_output()?;
-    if output.status.success() {
+        .wait()?;
+    if status.success() {
         Ok(())
     } else {
-        let exit_code = output.status.code().unwrap_or(1);
+        let exit_code = status.code().unwrap_or(1);
         bail!("nix eval failed to run (exited: {})", exit_code);
     }
 }
