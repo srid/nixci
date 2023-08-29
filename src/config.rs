@@ -72,10 +72,8 @@ impl SubFlakish {
     /// Return the `nix build` arguments for building all the outputs in this
     /// subflake configuration.
     pub fn nix_build_args_for_flake(&self, cli_args: &CliArgs, flake_url: &String) -> Vec<String> {
-        let mut extra_args = self
-            .override_inputs
-            .iter()
-            .flat_map(|(k, v)| {
+        std::iter::once(self.sub_flake_url(flake_url))
+            .chain(self.override_inputs.iter().flat_map(|(k, v)| {
                 [
                     "--override-input".to_string(),
                     // We must prefix the input with "flake" because
@@ -84,11 +82,8 @@ impl SubFlakish {
                     format!("flake/{}", k),
                     v.to_string(),
                 ]
-            })
-            .collect::<Vec<String>>();
-
-        extra_args.insert(0, self.sub_flake_url(flake_url));
-        extra_args.extend(cli_args.extra_nix_build_args.iter().cloned());
-        extra_args
+            }))
+            .chain(cli_args.extra_nix_build_args.iter().cloned())
+            .collect()
     }
 }
