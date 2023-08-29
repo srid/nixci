@@ -16,8 +16,7 @@ pub enum FlakeRef {
 
 impl Default for FlakeRef {
     fn default() -> Self {
-        let root_flake = FlakeRef::Flake(".".to_string());
-        root_flake
+        FlakeRef::Flake(".".to_string())
     }
 }
 
@@ -36,7 +35,7 @@ impl FlakeRef {
     /// Convert the value to a flake URL that Nix command will recognize.
     pub fn to_flake_url(&self) -> Result<String> {
         match self {
-            FlakeRef::GithubPR(pr) => Ok(PullRequest::get(&pr)?.flake_url()),
+            FlakeRef::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
             FlakeRef::Flake(url) => Ok(url.clone()),
         }
     }

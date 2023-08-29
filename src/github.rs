@@ -31,7 +31,7 @@ impl PullRequestRef {
                 Some(PullRequestRef {
                     owner: user.to_string(),
                     repo: repo.to_string(),
-                    pr: pr,
+                    pr,
                 })
             }
             _ => None,

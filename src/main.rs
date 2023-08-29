@@ -28,7 +28,7 @@ fn main() -> Result<()> {
         }
 
         let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
-        if outs.len() == 0 {
+        if outs.is_empty() {
             eprintln!("Warn: devour-flake produced no outputs")
         } else {
             for out in outs {

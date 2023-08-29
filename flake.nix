@@ -94,6 +94,7 @@
           '';
           nativeBuildInputs = [
             pkgs.cargo-watch
+            pkgs.clippy
             pkgs.rust-analyzer
             pkgs.devour-flake
           ];
