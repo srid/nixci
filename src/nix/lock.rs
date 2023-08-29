@@ -1,19 +1,13 @@
-use colored::Colorize;
 use std::process::Command;
 
 use anyhow::{bail, Result};
 
-use crate::nix::util::build_shell_command;
+use crate::nix::util::print_shell_command;
 
 pub fn nix_flake_lock_check(url: &String) -> Result<()> {
-    eprintln!(
-        "> {}",
-        build_shell_command(
-            "nix".to_string(),
-            ["flake", "lock", "--no-update-lock-file", url].into_iter(),
-        )
-        .blue()
-        .bold()
+    print_shell_command(
+        "nix",
+        ["flake", "lock", "--no-update-lock-file", url].into_iter(),
     );
     let output = Command::new("nix")
         .args(["flake", "lock", "--no-update-lock-file"])

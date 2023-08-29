@@ -1,5 +1,4 @@
 use anyhow::{bail, Context, Result};
-use colored::Colorize;
 /// Rust support for invoking https://github.com/srid/devour-flake
 use std::process::Stdio;
 use tokio::{
@@ -7,7 +6,7 @@ use tokio::{
     process::Command,
 };
 
-use super::util::build_shell_command;
+use super::util::print_shell_command;
 
 /// Absolute path to the devour-flake executable
 ///
@@ -19,12 +18,7 @@ pub struct DrvOut(pub String);
 
 #[tokio::main]
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut>> {
-    eprintln!(
-        "> {}",
-        build_shell_command(DEVOUR_FLAKE.to_owned(), args.iter().map(|s| &**s))
-            .blue()
-            .bold()
-    );
+    print_shell_command(DEVOUR_FLAKE, args.iter().map(|s| &**s));
     let mut output_fut = Command::new(DEVOUR_FLAKE)
         .args(args)
         .stdout(Stdio::piped())
