@@ -27,14 +27,7 @@ fn main() -> Result<()> {
             nix::lock::nix_flake_lock_check(&cfg.sub_flake_url(&url))?;
         }
 
-        let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
-        if outs.is_empty() {
-            eprintln!("Warn: devour-flake produced no outputs")
-        } else {
-            for out in outs {
-                println!("{}", out.0.bold());
-            }
-        }
+        nix::devour_flake::devour_flake(args.verbose, nix_args)?;
     }
     Ok(())
 }
