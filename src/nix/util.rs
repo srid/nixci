@@ -8,6 +8,8 @@ pub fn print_shell_command<'a>(program: &str, args: impl Iterator<Item = &'a str
         color(program),
         color(
             &args
+                // If the argument contains a special character, it must be
+                // quoted. We currently check only for "?", though.
                 .map(|x| if x.contains('?') {
                     format!("\"{}\"", x)
                 } else {
