@@ -6,7 +6,7 @@ use anyhow::{bail, Context, Result};
 ///
 /// If the flake does not output the given attribute, use the `Default`
 /// implementation of `T`.
-pub fn nix_eval_attr_json<T>(attr: &str, url: String) -> Result<T>
+pub fn nix_eval_attr_json<T>(attr: &str, url: &str) -> Result<T>
 where
     T: Default + serde::de::DeserializeOwned,
 {
@@ -18,14 +18,14 @@ where
         .stdout(Stdio::piped())
         .spawn()?
         .wait_with_output()
-        .with_context(|| "No 'nixci' config?")?;
+        .context("No 'nixci' config?")?;
     if output.status.success() {
         let raw_output = String::from_utf8(output.stdout)
-            .with_context(|| format!("Failed to decode 'nix eval' stdout as UTF-8"))?;
+            .context("Failed to decode 'nix eval' stdout as UTF-8")?;
         Ok(serde_json::from_str::<T>(&raw_output)?)
     } else {
         let raw_output = String::from_utf8(output.stderr)
-            .with_context(|| format!("Failed to decode 'nix eval' stderr as UTF-8"))?;
+            .context("Failed to decode 'nix eval' stderr as UTF-8")?;
         if raw_output.contains("does not provide attribute") {
             // The 'nixci' flake output attr is missing. User wants the default config.
             Ok(T::default())

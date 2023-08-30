@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     let url = args.flake_ref.to_flake_url()?;
     eprintln!("{}", format!("🍏 {}", url).bold());
 
-    let cfgs = config::Config::from_flake_url(url.clone())?;
+    let cfgs = config::Config::from_flake_url(&url)?;
     if args.verbose {
         eprintln!("DEBUG {cfgs:?}");
     }
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
         }
 
         let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
-        if outs.len() == 0 {
+        if outs.is_empty() {
             eprintln!("Warn: devour-flake produced no outputs")
         } else {
             for out in outs {

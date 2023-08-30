@@ -16,15 +16,14 @@ pub enum FlakeRef {
 
 impl Default for FlakeRef {
     fn default() -> Self {
-        let root_flake = FlakeRef::Flake(".".to_string());
-        root_flake
+        FlakeRef::Flake(".".to_string())
     }
 }
 
 impl FromStr for FlakeRef {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
-        let flake_ref = match github::PullRequestRef::from_web_url(&s.to_string()) {
+        let flake_ref = match github::PullRequestRef::from_web_url(s) {
             Some(pr) => FlakeRef::GithubPR(pr),
             None => FlakeRef::Flake(s.to_string()),
         };
@@ -36,7 +35,7 @@ impl FlakeRef {
     /// Convert the value to a flake URL that Nix command will recognize.
     pub fn to_flake_url(&self) -> Result<String> {
         match self {
-            FlakeRef::GithubPR(pr) => Ok(PullRequest::get(&pr)?.flake_url()),
+            FlakeRef::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
             FlakeRef::Flake(url) => Ok(url.clone()),
         }
     }
