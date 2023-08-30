@@ -10,7 +10,8 @@ pub fn print_shell_command<'a>(program: &str, args: impl Iterator<Item = &'a str
     let _ = write!(stderr, "> {}", color(program));
 
     for arg in args {
-        let _ = write!(stderr, " {}", color(arg));
+        let quote = color(if arg.contains('?') { "\"" } else { "" });
+        let _ = write!(stderr, " {quote}{}{quote}", color(arg));
     }
 
     let _ = writeln!(stderr);
