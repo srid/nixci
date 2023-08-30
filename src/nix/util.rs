@@ -14,7 +14,7 @@ pub fn print_shell_command<'a>(program: &str, args: impl Iterator<Item = &'a str
                     x.to_string()
                 })
                 .collect::<Vec<_>>()
-                .join("_")
+                .join(" ")
         )
     );
 }
