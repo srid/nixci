@@ -3,7 +3,7 @@ use colored::Colorize;
 /// Print a shell command that the user can run as-is.
 pub fn print_shell_command<'a>(program: &str, args: impl Iterator<Item = &'a str>) {
     let color = |s: &str| s.blue().bold();
-    println!(
+    eprintln!(
         "> {} {}",
         color(program),
         color(
