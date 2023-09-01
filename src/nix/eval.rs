@@ -31,7 +31,11 @@ where
             Ok(T::default())
         } else {
             let exit_code = output.status.code().unwrap_or(1);
-            bail!("nix eval failed to run (exited: {})", exit_code);
+            bail!(
+                "nix eval failed to run (exited: {}). raw_output = {}",
+                exit_code,
+                raw_output
+            );
         }
     }
 }
