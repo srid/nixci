@@ -67,7 +67,14 @@ impl PullRequest {
 
     /// The flake URL referencing the branch of this PR
     pub fn flake_url(&self) -> String {
-        format!("github:{}/{}", self.head.repo.full_name, self.head.ref_)
+        // We cannot use `github:user/repo` syntax, because it doesn't support
+        // special characters in branch name. For that, we need to use the full
+        // git+https URL with url encoded `ref` query parameter.
+        format!(
+            "git+https://github.com/{}?ref={}",
+            self.head.repo.full_name,
+            urlencoding::encode(&self.head.ref_)
+        )
     }
 }
 
