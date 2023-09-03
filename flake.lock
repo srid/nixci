@@ -47,11 +47,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1693774442,
-        "narHash": "sha256-LAaAybUeYNg3Uk0DrNIwXp4Vyrf32P4VHphYfM6i/IA=",
+        "lastModified": 1693779869,
+        "narHash": "sha256-kH7FB9EdxQhpwP9AsP9mCA6YcfE4xcKfKAR1Lvu76Ho=",
         "owner": "ipetkov",
         "repo": "devour-flake",
-        "rev": "d3968c27df1afa35a2e7437960a3662a9877399b",
+        "rev": "8df0c8a52536d281583e59fb673b06a593ee8522",
         "type": "github"
       },
       "original": {
