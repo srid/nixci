@@ -55,6 +55,10 @@ pub struct CliArgs {
     #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,
 
+    /// The which specific `nixci` configuration to build
+    #[arg(short = 'c', long, default_value = "default")]
+    pub config: String,
+
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![
         "--refresh".to_string(),
