@@ -51,6 +51,10 @@ pub struct CliArgs {
     #[arg(short = 'v')]
     pub verbose: bool,
 
+    /// Only build derivations for whom binary caches are not available
+    #[arg(long)]
+    pub uncached: bool,
+
     /// Flake URL or github URL
     #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,

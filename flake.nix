@@ -13,8 +13,14 @@
     flake-root.url = "github:srid/flake-root";
 
     # App dependenciues
-    devour-flake.url = "github:srid/devour-flake/v2";
-    devour-flake.flake = false;
+    devour-flake = {
+      url = "github:ipetkov/devour-flake/uncached";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs";
+        systems.follows = "systems";
+      };
+    };
   };
 
   outputs = inputs:
@@ -28,16 +34,11 @@
         inputs.flake-root.flakeModule
       ];
 
-      perSystem = { config, self', pkgs, lib, system, ... }: {
-        _module.args.pkgs = import inputs.nixpkgs {
-          inherit system;
-          overlays = [
-            (self: super: {
-              devour-flake = self.callPackage inputs.devour-flake { };
-            })
-          ];
-        };
-
+      perSystem = { config, self', pkgs, lib, system, ... }:
+      let
+        devour-flake = inputs.devour-flake.packages.${system}.default;
+      in
+      {
         # Rust project definition
         # cf. https://github.com/nix-community/dream2nix
         dream2nix.inputs."nixci" = {
@@ -76,7 +77,7 @@
         packages.default =
           let nixci = config.dream2nix.outputs.nixci.packages.nixci;
           in nixci.overrideAttrs (old: {
-            DEVOUR_FLAKE = lib.getExe pkgs.devour-flake;
+            DEVOUR_FLAKE = devour-flake;
           });
         overlayAttrs.nixci = self'.packages.default;
 
@@ -90,13 +91,13 @@
           shellHook = ''
             # For rust-analyzer 'hover' tooltips to work.
             export RUST_SRC_PATH=${pkgs.rustPlatform.rustLibSrc}
-            export DEVOUR_FLAKE=${lib.getExe pkgs.devour-flake}
+            export DEVOUR_FLAKE=${devour-flake}
           '';
           nativeBuildInputs = [
             pkgs.cargo-watch
             pkgs.clippy
             pkgs.rust-analyzer
-            pkgs.devour-flake
+            devour-flake
           ];
         };
 

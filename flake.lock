@@ -35,18 +35,28 @@
       }
     },
     "devour-flake": {
-      "flake": false,
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": [
+          "systems"
+        ]
+      },
       "locked": {
-        "lastModified": 1689267783,
-        "narHash": "sha256-CZedJtbZlWAbv/b/aYgOEFd9vcTBn/oJNI3p29UitLk=",
-        "owner": "srid",
+        "lastModified": 1693774442,
+        "narHash": "sha256-LAaAybUeYNg3Uk0DrNIwXp4Vyrf32P4VHphYfM6i/IA=",
+        "owner": "ipetkov",
         "repo": "devour-flake",
-        "rev": "f4d8c8eaade5fefe0d466c4bb90215d387eadc23",
+        "rev": "d3968c27df1afa35a2e7437960a3662a9877399b",
         "type": "github"
       },
       "original": {
-        "owner": "srid",
-        "ref": "v2",
+        "owner": "ipetkov",
+        "ref": "uncached",
         "repo": "devour-flake",
         "type": "github"
       }
