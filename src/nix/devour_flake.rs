@@ -7,8 +7,8 @@ use tokio::{
     process::Command,
 };
 
-use crate::cli::CliArgs;
 use super::util::print_shell_command;
+use crate::cli::CliArgs;
 
 /// Absolute path to the devour-flake executable
 ///
