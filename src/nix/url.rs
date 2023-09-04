@@ -13,17 +13,8 @@ pub struct FlakeUrl(pub String);
 pub struct FlakeAttr(Option<String>);
 
 impl FlakeUrl {
-    /// Get the [FlakeAttr] pointed by this flake.
-    pub fn get_attr(&self) -> FlakeAttr {
-        self.split_attr().1
-    }
-
-    /// Get the url without the .# attribute part.
-    pub fn without_attr(&self) -> FlakeUrl {
-        self.split_attr().0
-    }
-
-    fn split_attr(&self) -> (Self, FlakeAttr) {
+    /// Split the [FlakeAttr] out of the [FlakeUrl]
+    pub fn split_attr(&self) -> (Self, FlakeAttr) {
         match self.0.split_once('#') {
             Some((url, attr)) => (FlakeUrl(url.to_string()), FlakeAttr(Some(attr.to_string()))),
             None => (self.clone(), FlakeAttr(None)),
