@@ -21,7 +21,9 @@ nix run nixpkgs#nixci
 
 ### From source
 
-> [!NOTE] To make use of the binary cache, first run: 
+> **Note** 
+>
+> To make use of the binary cache, first run:
 >
 > `nix run nixpkgs#cachix use srid`
 
