@@ -7,37 +7,45 @@ use crate::github::{self, PullRequest, PullRequestRef};
 
 /// A reference to some flake living somewhere
 #[derive(Debug, Clone)]
-pub enum FlakeRef {
+pub struct FlakeRef {
+    kind: FlakeRefKind,
+    config: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum FlakeRefKind {
     /// A github PR
     GithubPR(PullRequestRef),
     /// A flake URL supported by Nix commands
     Flake(String),
 }
 
-impl Default for FlakeRef {
-    fn default() -> Self {
-        FlakeRef::Flake(".".to_string())
-    }
-}
-
 impl FromStr for FlakeRef {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
-        let flake_ref = match github::PullRequestRef::from_web_url(s) {
-            Some(pr) => FlakeRef::GithubPR(pr),
-            None => FlakeRef::Flake(s.to_string()),
-        };
-        Ok(flake_ref)
+        let (s, config) = s.split_once('#').unwrap_or((s, "default"));
+
+        Ok(Self {
+            kind: match github::PullRequestRef::from_web_url(s) {
+                Some(pr) => FlakeRefKind::GithubPR(pr),
+                None => FlakeRefKind::Flake(s.to_string()),
+            },
+            config: config.to_owned(),
+        })
     }
 }
 
 impl FlakeRef {
     /// Convert the value to a flake URL that Nix command will recognize.
     pub fn to_flake_url(&self) -> Result<String> {
-        match self {
-            FlakeRef::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
-            FlakeRef::Flake(url) => Ok(url.clone()),
+        match &self.kind {
+            FlakeRefKind::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
+            FlakeRefKind::Flake(url) => Ok(url.clone()),
         }
+    }
+
+    pub fn config(&self) -> &str {
+        &self.config
     }
 }
 
@@ -52,12 +60,11 @@ pub struct CliArgs {
     pub verbose: bool,
 
     /// Flake URL or github URL
-    #[arg(default_value = ".")]
+    ///
+    /// A specific nixci` configuration can be specified
+    /// using '#': e.g. `nixci .#extra-tests`
+    #[arg(default_value = ".#default")]
     pub flake_ref: FlakeRef,
-
-    /// The which specific `nixci` configuration to build
-    #[arg(short = 'c', long, default_value = "default")]
-    pub config: String,
 
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![

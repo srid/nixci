@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     let url = args.flake_ref.to_flake_url()?;
     eprintln!("{}", format!("🍏 {}", url).bold());
 
-    let cfgs = config::Config::from_flake_url(&args, &url)?;
+    let cfgs = config::Config::from_flake_url(&args.flake_ref, &url)?;
     if args.verbose {
         eprintln!("DEBUG {cfgs:?}");
     }
