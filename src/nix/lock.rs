@@ -2,16 +2,18 @@ use std::process::{Command, Stdio};
 
 use anyhow::{bail, Result};
 
-use crate::nix::util::print_shell_command;
+use crate::{cli::FlakeUrl, nix::util::print_shell_command};
 
-pub fn nix_flake_lock_check(url: &str) -> Result<()> {
-    print_shell_command(
-        "nix",
-        ["flake", "lock", "--no-update-lock-file", url].into_iter(),
-    );
+pub fn nix_flake_lock_check(url: &FlakeUrl) -> Result<()> {
+    let args = [
+        "flake",
+        "lock",
+        "--no-update-lock-file",
+        &url.without_attr().0,
+    ];
+    print_shell_command("nix", args.into_iter());
     let status = Command::new("nix")
-        .args(["flake", "lock", "--no-update-lock-file"])
-        .arg(url)
+        .args(args)
         .stdin(Stdio::null())
         .spawn()?
         .wait()?;
@@ -19,6 +21,6 @@ pub fn nix_flake_lock_check(url: &str) -> Result<()> {
         Ok(())
     } else {
         let exit_code = status.code().unwrap_or(1);
-        bail!("nix eval failed to run (exited: {})", exit_code);
+        bail!("nix flake lock failed to run (exited: {})", exit_code);
     }
 }

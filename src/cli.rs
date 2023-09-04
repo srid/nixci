@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use clap::Parser;
+use serde::Deserialize;
 
 use crate::github::{self, PullRequest, PullRequestRef};
 
@@ -11,39 +12,73 @@ pub enum FlakeRef {
     /// A github PR
     GithubPR(PullRequestRef),
     /// A flake URL supported by Nix commands
-    Flake { url: String, anchor: String },
+    Flake(FlakeUrl),
+}
+
+/// A valid flake URL
+///
+/// See [syntax here](https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html#url-like-syntax).
+#[derive(Debug, Clone, Deserialize)]
+pub struct FlakeUrl(pub String);
+
+/// The attribute output part of a [FlakeUrl]
+///
+/// Example: `foo` in `.#foo`.
+#[derive(Debug, Clone)]
+pub struct FlakeAttr(Option<String>);
+
+impl FlakeUrl {
+    /// Get the [FlakeAttr] pointed by this flake.
+    pub fn get_attr(&self) -> FlakeAttr {
+        self.split_attr().1
+    }
+
+    pub fn without_attr(&self) -> FlakeUrl {
+        self.split_attr().0
+    }
+
+    fn split_attr(&self) -> (Self, FlakeAttr) {
+        match self.0.split_once('#') {
+            Some((url, attr)) => (FlakeUrl(url.to_string()), FlakeAttr(Some(attr.to_string()))),
+            None => (self.clone(), FlakeAttr(None)),
+        }
+    }
+
+    /// Return the flake URL pointing to the sub-flake
+    pub fn sub_flake_url(&self, dir: String) -> FlakeUrl {
+        if dir == "." {
+            self.clone()
+        } else {
+            FlakeUrl(format!("{}?dir={}", self.0, dir))
+        }
+    }
+}
+
+impl FlakeAttr {
+    /// Get the attribute name.
+    ///
+    /// If attribute exists, then return "default".
+    pub fn get_name(&self) -> String {
+        self.0.clone().unwrap_or_else(|| "default".to_string())
+    }
 }
 
 impl FromStr for FlakeRef {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
-        let (s, anchor) = s.split_once('#').unwrap_or((s, "default"));
-
-        Ok(
-            match github::PullRequestRef::from_web_url(s, anchor.to_owned()) {
-                Some(pr) => FlakeRef::GithubPR(pr),
-                None => FlakeRef::Flake {
-                    url: s.to_string(),
-                    anchor: anchor.to_owned(),
-                },
-            },
-        )
+        Ok(match github::PullRequestRef::from_web_url(s) {
+            Some(pr) => FlakeRef::GithubPR(pr),
+            None => FlakeRef::Flake(FlakeUrl(s.to_string())),
+        })
     }
 }
 
 impl FlakeRef {
     /// Convert the value to a flake URL that Nix command will recognize.
-    pub fn to_flake_url(&self) -> Result<String> {
+    pub fn to_flake_url(&self) -> Result<FlakeUrl> {
         match self {
             FlakeRef::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
-            FlakeRef::Flake { url, .. } => Ok(url.clone()),
-        }
-    }
-
-    pub fn config(&self) -> &str {
-        match self {
-            FlakeRef::GithubPR(pr) => pr.config(),
-            FlakeRef::Flake { anchor, .. } => anchor,
+            FlakeRef::Flake(url) => Ok(url.clone()),
         }
     }
 }

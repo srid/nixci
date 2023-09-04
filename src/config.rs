@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::Deserialize;
 
 use crate::{
-    cli::{CliArgs, FlakeRef},
+    cli::{CliArgs, FlakeUrl},
     nix,
 };
 
@@ -33,8 +33,9 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn from_flake_url(flake: &FlakeRef, url: &str) -> Result<Self> {
-        nix::eval::nix_eval_attr_json::<Config>(&format!("nixci.{}", flake.config()), url)
+    pub fn from_flake_url(url: &FlakeUrl) -> Result<Self> {
+        let attr = url.get_attr().get_name();
+        nix::eval::nix_eval_attr_json::<Config>(&format!("nixci.{}", attr), url.without_attr())
     }
 }
 
@@ -51,7 +52,7 @@ pub struct SubFlakish {
     // NB: we use BTreeMap instead of HashMap here so that we always iterate
     // inputs in a determinitstic (i.e. asciibetical) order
     #[serde(rename = "overrideInputs", default)]
-    pub override_inputs: BTreeMap<String, String>,
+    pub override_inputs: BTreeMap<String, FlakeUrl>,
 }
 
 impl Default for SubFlakish {
@@ -65,19 +66,14 @@ impl Default for SubFlakish {
 }
 
 impl SubFlakish {
-    /// Return the flake URL pointing to the sub-flake
-    pub fn sub_flake_url(&self, root_flake_url: &String) -> String {
-        if self.dir == "." {
-            root_flake_url.clone()
-        } else {
-            format!("{}?dir={}", root_flake_url, self.dir)
-        }
-    }
-
     /// Return the `nix build` arguments for building all the outputs in this
     /// subflake configuration.
-    pub fn nix_build_args_for_flake(&self, cli_args: &CliArgs, flake_url: &String) -> Vec<String> {
-        std::iter::once(self.sub_flake_url(flake_url))
+    pub fn nix_build_args_for_flake(
+        &self,
+        cli_args: &CliArgs,
+        flake_url: &FlakeUrl,
+    ) -> Vec<String> {
+        std::iter::once(flake_url.without_attr().sub_flake_url(self.dir.clone()).0)
             .chain(self.override_inputs.iter().flat_map(|(k, v)| {
                 [
                     "--override-input".to_string(),
@@ -85,7 +81,7 @@ impl SubFlakish {
                     // devour-flake uses that input name to refer to the user's
                     // flake.
                     format!("flake/{}", k),
-                    v.to_string(),
+                    v.0.to_string(),
                 ]
             }))
             .chain(cli_args.extra_nix_build_args.iter().cloned())

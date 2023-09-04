@@ -13,9 +13,9 @@ fn main() -> Result<()> {
         eprintln!("DEBUG {args:?}");
     }
     let url = args.flake_ref.to_flake_url()?;
-    eprintln!("{}", format!("🍏 {}", url).bold());
+    eprintln!("{}", format!("🍏 {}", url.0).bold());
 
-    let cfgs = config::Config::from_flake_url(&args.flake_ref, &url)?;
+    let cfgs = config::Config::from_flake_url(&url)?;
     if args.verbose {
         eprintln!("DEBUG {cfgs:?}");
     }
@@ -24,7 +24,7 @@ fn main() -> Result<()> {
         let nix_args = cfg.nix_build_args_for_flake(&args, &url);
         eprintln!("🍎 {}", cfg_name.italic());
         if cfg.override_inputs.is_empty() {
-            nix::lock::nix_flake_lock_check(&cfg.sub_flake_url(&url))?;
+            nix::lock::nix_flake_lock_check(&url.sub_flake_url(cfg.dir.clone()))?;
         }
 
         let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
