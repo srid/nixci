@@ -8,11 +8,11 @@ use url::{Host, Url};
 use crate::nix::url::FlakeUrl;
 
 /// A reference to a Github Pull Request
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PullRequestRef {
-    owner: String,
-    repo: String,
-    pr: u64,
+    pub(crate) owner: String,
+    pub(crate) repo: String,
+    pub(crate) pr: u64,
 }
 
 impl PullRequestRef {
