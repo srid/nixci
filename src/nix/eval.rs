@@ -2,17 +2,19 @@ use std::process::{Command, Stdio};
 
 use anyhow::{bail, Context, Result};
 
-/// Run 'nix eval .#attr --json` and parse its JSON
+use super::url::FlakeUrl;
+
+/// Run 'nix eval <url> --json` and parse its JSON
 ///
 /// If the flake does not output the given attribute, use the `Default`
 /// implementation of `T`.
-pub fn nix_eval_attr_json<T>(attr: &str, url: &str) -> Result<T>
+pub fn nix_eval_attr_json<T>(url: FlakeUrl) -> Result<T>
 where
     T: Default + serde::de::DeserializeOwned,
 {
     let output = Command::new("nix")
         .arg("eval")
-        .arg(format!("{}#{}", url, attr))
+        .arg(url.0)
         .arg("--json")
         .stderr(Stdio::piped())
         .stdout(Stdio::piped())

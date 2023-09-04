@@ -3,7 +3,10 @@ use std::str::FromStr;
 use anyhow::Result;
 use clap::Parser;
 
-use crate::github::{self, PullRequest, PullRequestRef};
+use crate::{
+    github::{self, PullRequest, PullRequestRef},
+    nix::url::FlakeUrl,
+};
 
 /// A reference to some flake living somewhere
 #[derive(Debug, Clone)]
@@ -11,13 +14,7 @@ pub enum FlakeRef {
     /// A github PR
     GithubPR(PullRequestRef),
     /// A flake URL supported by Nix commands
-    Flake(String),
-}
-
-impl Default for FlakeRef {
-    fn default() -> Self {
-        FlakeRef::Flake(".".to_string())
-    }
+    Flake(FlakeUrl),
 }
 
 impl FromStr for FlakeRef {
@@ -25,7 +22,7 @@ impl FromStr for FlakeRef {
     fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
         let flake_ref = match github::PullRequestRef::from_web_url(s) {
             Some(pr) => FlakeRef::GithubPR(pr),
-            None => FlakeRef::Flake(s.to_string()),
+            None => FlakeRef::Flake(FlakeUrl(s.to_string())),
         };
         Ok(flake_ref)
     }
@@ -33,7 +30,7 @@ impl FromStr for FlakeRef {
 
 impl FlakeRef {
     /// Convert the value to a flake URL that Nix command will recognize.
-    pub fn to_flake_url(&self) -> Result<String> {
+    pub fn to_flake_url(&self) -> Result<FlakeUrl> {
         match self {
             FlakeRef::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
             FlakeRef::Flake(url) => Ok(url.clone()),
@@ -52,6 +49,9 @@ pub struct CliArgs {
     pub verbose: bool,
 
     /// Flake URL or github URL
+    ///
+    /// A specific nixci` configuration can be specified
+    /// using '#': e.g. `nixci .#extra-tests`
     #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,
 

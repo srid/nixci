@@ -62,7 +62,7 @@ By default, `nixci` will build the top-level flake, but you can tell it to build
 ```nix
 # myproject/flake.nix
 {
-  nixci = {
+  nixci.default = {
     dir1 = {
         dir = "dir1";
     };
@@ -73,6 +73,8 @@ By default, `nixci` will build the top-level flake, but you can tell it to build
   }
 }
 ```
+
+You can have more than one nixci configuration. For eg., `nixci .#foo` will run the configuration from `nixci.foo` flake output.
 
 ### Examples
 

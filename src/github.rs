@@ -5,6 +5,8 @@ use serde::Deserialize;
 use try_guard::guard;
 use url::{Host, Url};
 
+use crate::nix::url::FlakeUrl;
+
 /// A reference to a Github Pull Request
 #[derive(Debug, Clone)]
 pub struct PullRequestRef {
@@ -66,15 +68,15 @@ impl PullRequest {
     }
 
     /// The flake URL referencing the branch of this PR
-    pub fn flake_url(&self) -> String {
+    pub fn flake_url(&self) -> FlakeUrl {
         // We cannot use `github:user/repo` syntax, because it doesn't support
         // special characters in branch name. For that, we need to use the full
         // git+https URL with url encoded `ref` query parameter.
-        format!(
+        FlakeUrl(format!(
             "git+https://github.com/{}?ref={}",
             self.head.repo.full_name,
             urlencoding::encode(&self.head.ref_)
-        )
+        ))
     }
 }
 
