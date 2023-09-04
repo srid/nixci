@@ -27,17 +27,18 @@ impl Default for Config {
     /// Default value contains a single entry for the root flake.
     fn default() -> Self {
         let mut m = BTreeMap::new();
-        m.insert("root".to_string(), SubFlakish::default());
+        m.insert("<root>".to_string(), SubFlakish::default());
         Config(m)
     }
 }
 
 impl Config {
-    pub fn from_flake_url(url: &FlakeUrl) -> Result<(Self, FlakeUrl)> {
+    pub fn from_flake_url(url: &FlakeUrl) -> Result<((String, Self), FlakeUrl)> {
         let (url, attr) = url.split_attr();
-        let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, attr.get_name()));
+        let name = attr.get_name();
+        let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, name));
         let cfg = nix::eval::nix_eval_attr_json::<Config>(nixci_url)?;
-        Ok((cfg, url))
+        Ok(((name, cfg), url))
     }
 }
 

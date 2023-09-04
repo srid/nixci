@@ -15,16 +15,16 @@ fn main() -> Result<()> {
     let url = args.flake_ref.to_flake_url()?;
     eprintln!("{}", format!("🍏 {}", url.0).bold());
 
-    let (cfgs, url) = config::Config::from_flake_url(&url)?;
+    let ((cfg_name, cfg), url) = config::Config::from_flake_url(&url)?;
     if args.verbose {
-        eprintln!("DEBUG {cfgs:?}");
+        eprintln!("DEBUG {cfg:?}");
     }
 
-    for (cfg_name, cfg) in &cfgs.0 {
-        let nix_args = cfg.nix_build_args_for_flake(&args, &url);
-        eprintln!("🍎 {}", cfg_name.italic());
-        if cfg.override_inputs.is_empty() {
-            nix::lock::nix_flake_lock_check(&url.sub_flake_url(cfg.dir.clone()))?;
+    for (subflake_name, subflake) in &cfg.0 {
+        let nix_args = subflake.nix_build_args_for_flake(&args, &url);
+        eprintln!("🍎 {}", format!("{}.{}", cfg_name, subflake_name).italic());
+        if subflake.override_inputs.is_empty() {
+            nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone()))?;
         }
 
         let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
