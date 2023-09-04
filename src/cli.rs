@@ -20,10 +20,11 @@ pub enum FlakeRef {
 impl FromStr for FlakeRef {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
-        Ok(match github::PullRequestRef::from_web_url(s) {
+        let flake_ref = match github::PullRequestRef::from_web_url(s) {
             Some(pr) => FlakeRef::GithubPR(pr),
             None => FlakeRef::Flake(FlakeUrl(s.to_string())),
-        })
+        };
+        Ok(flake_ref)
     }
 }
 
