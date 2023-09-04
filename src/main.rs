@@ -1,4 +1,4 @@
-mod cli;
+pub(crate) mod cli;
 mod config;
 mod github;
 mod nix;
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
             nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone()))?;
         }
 
-        let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
+        let outs = nix::devour_flake::devour_flake(&args, nix_args)?;
         if outs.is_empty() {
             eprintln!("Warn: devour-flake produced no outputs")
         } else {

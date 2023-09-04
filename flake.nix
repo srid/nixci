@@ -13,8 +13,14 @@
     flake-root.url = "github:srid/flake-root";
 
     # App dependenciues
-    devour-flake.url = "github:srid/devour-flake/v2";
-    devour-flake.flake = false;
+    devour-flake = {
+      url = "github:ipetkov/devour-flake/uncached";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs";
+        systems.follows = "systems";
+      };
+    };
   };
 
   outputs = inputs:
@@ -28,111 +34,106 @@
         inputs.flake-root.flakeModule
       ];
 
-      perSystem = { config, self', pkgs, lib, system, ... }: {
-        _module.args.pkgs = import inputs.nixpkgs {
-          inherit system;
-          overlays = [
-            (self: super: {
-              devour-flake = self.callPackage inputs.devour-flake { };
-            })
-          ];
-        };
-
-        # Rust project definition
-        # cf. https://github.com/nix-community/dream2nix
-        dream2nix.inputs."nixci" = {
-          source = lib.sourceFilesBySuffices ./. [
-            ".rs"
-            "Cargo.toml"
-            "Cargo.lock"
-          ];
-          projects."nixci" = { name, ... }: {
-            inherit name;
-            subsystem = "rust";
-            translator = "cargo-lock";
-          };
-          packageOverrides =
-            let
-              common = {
-                add-deps = with pkgs; with pkgs.darwin.apple_sdk.frameworks; {
-                  nativeBuildInputs = old: old ++ lib.optionals stdenv.isDarwin [
-                    Security
-                  ] ++ [
-                    libiconv
-                    openssl
-                    pkgconfig
-                  ];
-                };
-              };
-            in
-            {
-              # Project and dependency overrides:
-              nixci = common // { };
-              nixci-deps = common;
+      perSystem = { config, self', pkgs, lib, system, ... }:
+        let
+          devour-flake = inputs.devour-flake.packages.${system}.default;
+        in
+        {
+          # Rust project definition
+          # cf. https://github.com/nix-community/dream2nix
+          dream2nix.inputs."nixci" = {
+            source = lib.sourceFilesBySuffices ./. [
+              ".rs"
+              "Cargo.toml"
+              "Cargo.lock"
+            ];
+            projects."nixci" = { name, ... }: {
+              inherit name;
+              subsystem = "rust";
+              translator = "cargo-lock";
             };
-        };
-
-        # Flake outputs
-        packages.default =
-          let nixci = config.dream2nix.outputs.nixci.packages.nixci;
-          in nixci.overrideAttrs (old: {
-            DEVOUR_FLAKE = lib.getExe pkgs.devour-flake;
-          });
-        overlayAttrs.nixci = self'.packages.default;
-
-        devShells.default = pkgs.mkShell {
-          inputsFrom = [
-            config.dream2nix.outputs.nixci.devShells.default
-            config.treefmt.build.devShell
-            config.mission-control.devShell
-            config.flake-root.devShell
-          ];
-          shellHook = ''
-            # For rust-analyzer 'hover' tooltips to work.
-            export RUST_SRC_PATH=${pkgs.rustPlatform.rustLibSrc}
-            export DEVOUR_FLAKE=${lib.getExe pkgs.devour-flake}
-          '';
-          nativeBuildInputs = [
-            pkgs.cargo-watch
-            pkgs.clippy
-            pkgs.rust-analyzer
-            pkgs.devour-flake
-          ];
-        };
-
-        # Add your auto-formatters here.
-        # cf. https://numtide.github.io/treefmt/
-        treefmt.config = {
-          projectRootFile = "flake.nix";
-          programs = {
-            nixpkgs-fmt.enable = true;
-            rustfmt.enable = true;
-          };
-        };
-
-        # Makefile'esque but in Nix. Add your dev scripts here.
-        # cf. https://github.com/Platonic-Systems/mission-control
-        mission-control.scripts = {
-          fmt = {
-            exec = config.treefmt.build.wrapper;
-            description = "Auto-format project tree";
+            packageOverrides =
+              let
+                common = {
+                  add-deps = with pkgs; with pkgs.darwin.apple_sdk.frameworks; {
+                    nativeBuildInputs = old: old ++ lib.optionals stdenv.isDarwin [
+                      Security
+                    ] ++ [
+                      libiconv
+                      openssl
+                      pkgconfig
+                    ];
+                  };
+                };
+              in
+              {
+                # Project and dependency overrides:
+                nixci = common // { };
+                nixci-deps = common;
+              };
           };
 
-          run = {
-            exec = ''
-              cargo run "$@"
+          # Flake outputs
+          packages.default =
+            let nixci = config.dream2nix.outputs.nixci.packages.nixci;
+            in nixci.overrideAttrs (old: {
+              DEVOUR_FLAKE = devour-flake;
+            });
+          overlayAttrs.nixci = self'.packages.default;
+
+          devShells.default = pkgs.mkShell {
+            inputsFrom = [
+              config.dream2nix.outputs.nixci.devShells.default
+              config.treefmt.build.devShell
+              config.mission-control.devShell
+              config.flake-root.devShell
+            ];
+            shellHook = ''
+              # For rust-analyzer 'hover' tooltips to work.
+              export RUST_SRC_PATH=${pkgs.rustPlatform.rustLibSrc}
+              export DEVOUR_FLAKE=${devour-flake}
             '';
-            description = "Run the project executable";
+            nativeBuildInputs = [
+              pkgs.cargo-watch
+              pkgs.clippy
+              pkgs.rust-analyzer
+              devour-flake
+            ];
           };
 
-          watch = {
-            exec = ''
-              set -x
-              cargo watch -x "run -- $*"
-            '';
-            description = "Watch for changes and run the project executable";
+          # Add your auto-formatters here.
+          # cf. https://numtide.github.io/treefmt/
+          treefmt.config = {
+            projectRootFile = "flake.nix";
+            programs = {
+              nixpkgs-fmt.enable = true;
+              rustfmt.enable = true;
+            };
+          };
+
+          # Makefile'esque but in Nix. Add your dev scripts here.
+          # cf. https://github.com/Platonic-Systems/mission-control
+          mission-control.scripts = {
+            fmt = {
+              exec = config.treefmt.build.wrapper;
+              description = "Auto-format project tree";
+            };
+
+            run = {
+              exec = ''
+                cargo run "$@"
+              '';
+              description = "Run the project executable";
+            };
+
+            watch = {
+              exec = ''
+                set -x
+                cargo watch -x "run -- $*"
+              '';
+              description = "Watch for changes and run the project executable";
+            };
           };
         };
-      };
     };
 }

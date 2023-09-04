@@ -8,20 +8,29 @@ use tokio::{
 };
 
 use super::util::print_shell_command;
+use crate::cli::CliArgs;
 
 /// Absolute path to the devour-flake executable
 ///
 /// We expect this environment to be set in Nix build and shell.
-pub const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
+pub const DEVOUR_FLAKE: &str = concat!(env!("DEVOUR_FLAKE"), "/bin/devour-flake");
+pub const DEVOUR_FLAKE_UNCACHED: &str = concat!(env!("DEVOUR_FLAKE"), "/bin/devour-flake-uncached");
 
 /// Nix derivation output path
 pub struct DrvOut(pub String);
 
 #[tokio::main]
-pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut>> {
-    print_shell_command(DEVOUR_FLAKE, args.iter().map(|s| &**s));
-    let mut output_fut = Command::new(DEVOUR_FLAKE)
-        .args(args)
+pub async fn devour_flake(args: &CliArgs, nix_args: Vec<String>) -> Result<Vec<DrvOut>> {
+    let verbose = args.verbose;
+    let exe = if args.uncached {
+        DEVOUR_FLAKE_UNCACHED
+    } else {
+        DEVOUR_FLAKE
+    };
+
+    print_shell_command(exe, nix_args.iter().map(|s| &**s));
+    let mut output_fut = Command::new(exe)
+        .args(nix_args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;
