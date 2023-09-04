@@ -26,7 +26,8 @@ impl FlakeUrl {
         if dir == "." {
             self.clone()
         } else {
-            FlakeUrl(format!("{}?dir={}", self.0, dir))
+            let sep = if self.0.contains('?') { '&' } else { '?' };
+            FlakeUrl(format!("{}{}dir={}", self.0, sep, dir))
         }
     }
 }
