@@ -33,11 +33,12 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn from_flake_url(url: &FlakeUrl) -> Result<Self> {
+    pub fn from_flake_url(url: &FlakeUrl) -> Result<(Self, FlakeUrl)> {
         let attr = url.get_attr().get_name();
         let url = url.without_attr();
         let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, attr));
-        nix::eval::nix_eval_attr_json::<Config>(nixci_url)
+        let cfg = nix::eval::nix_eval_attr_json::<Config>(nixci_url)?;
+        Ok((cfg, url))
     }
 }
 
@@ -75,7 +76,7 @@ impl SubFlakish {
         cli_args: &CliArgs,
         flake_url: &FlakeUrl,
     ) -> Vec<String> {
-        std::iter::once(flake_url.without_attr().sub_flake_url(self.dir.clone()).0)
+        std::iter::once(flake_url.sub_flake_url(self.dir.clone()).0)
             .chain(self.override_inputs.iter().flat_map(|(k, v)| {
                 [
                     "--override-input".to_string(),

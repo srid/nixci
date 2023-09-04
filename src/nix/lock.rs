@@ -7,12 +7,7 @@ use crate::nix::util::print_shell_command;
 use super::url::FlakeUrl;
 
 pub fn nix_flake_lock_check(url: &FlakeUrl) -> Result<()> {
-    let args = [
-        "flake",
-        "lock",
-        "--no-update-lock-file",
-        &url.without_attr().0,
-    ];
+    let args = ["flake", "lock", "--no-update-lock-file", &url.0];
     print_shell_command("nix", args.into_iter());
     let status = Command::new("nix")
         .args(args)
