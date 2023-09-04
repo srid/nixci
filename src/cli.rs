@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// A reference to some flake living somewhere
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FlakeRef {
     /// A github PR
     GithubPR(PullRequestRef),
@@ -62,4 +62,37 @@ pub struct CliArgs {
         "auto".to_string(),
     ])]
     pub extra_nix_build_args: Vec<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_github_pr() {
+        assert_eq!(
+            FlakeRef::from_str("https://github.com/srid/nixci/pull/19").unwrap(),
+            FlakeRef::GithubPR(PullRequestRef {
+                owner: "srid".to_string(),
+                repo: "nixci".to_string(),
+                pr: 19
+            })
+        );
+    }
+
+    #[test]
+    fn test_current_dir() {
+        assert_eq!(
+            FlakeRef::from_str(".").unwrap(),
+            FlakeRef::Flake(FlakeUrl(".".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_flake_url() {
+        assert_eq!(
+            FlakeRef::from_str("github:srid/nixci").unwrap(),
+            FlakeRef::Flake(FlakeUrl("github:srid/nixci".to_string()))
+        );
+    }
 }
