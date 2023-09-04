@@ -35,7 +35,9 @@ impl Default for Config {
 impl Config {
     pub fn from_flake_url(url: &FlakeUrl) -> Result<Self> {
         let attr = url.get_attr().get_name();
-        nix::eval::nix_eval_attr_json::<Config>(&format!("nixci.{}", attr), url.without_attr())
+        let url = url.without_attr();
+        let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, attr));
+        nix::eval::nix_eval_attr_json::<Config>(nixci_url)
     }
 }
 

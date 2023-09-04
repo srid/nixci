@@ -51,7 +51,7 @@ pub struct CliArgs {
     ///
     /// A specific nixci` configuration can be specified
     /// using '#': e.g. `nixci .#extra-tests`
-    #[arg(default_value = ".#default")]
+    #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,
 
     /// Additional arguments to pass through to `nix build`
