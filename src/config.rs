@@ -4,8 +4,8 @@ use anyhow::Result;
 use serde::Deserialize;
 
 use crate::{
-    cli::{CliArgs, FlakeUrl},
-    nix,
+    cli::CliArgs,
+    nix::{self, url::FlakeUrl},
 };
 
 /// Rust type for the `nixci` flake output

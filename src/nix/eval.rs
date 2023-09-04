@@ -2,7 +2,7 @@ use std::process::{Command, Stdio};
 
 use anyhow::{bail, Context, Result};
 
-use crate::cli::FlakeUrl;
+use super::url::FlakeUrl;
 
 /// Run 'nix eval .#attr --json` and parse its JSON
 ///

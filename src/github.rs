@@ -5,7 +5,7 @@ use serde::Deserialize;
 use try_guard::guard;
 use url::{Host, Url};
 
-use crate::cli::FlakeUrl;
+use crate::nix::url::FlakeUrl;
 
 /// A reference to a Github Pull Request
 #[derive(Debug, Clone)]

@@ -63,13 +63,13 @@ By default, `nixci` will build the top-level flake, but you can tell it to build
 # myproject/flake.nix
 {
   nixci.default = {
-      dir1 = {
-          dir = "dir1";
-      };
-      dir2 = {
-          dir = "dir2";
-          overrideInputs.myproject = ./.;
-      };
+    dir1 = {
+        dir = "dir1";
+    };
+    dir2 = {
+        dir = "dir2";
+        overrideInputs.myproject = ./.;
+    };
   }
 }
 ```

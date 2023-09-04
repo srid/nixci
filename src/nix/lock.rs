@@ -2,7 +2,9 @@ use std::process::{Command, Stdio};
 
 use anyhow::{bail, Result};
 
-use crate::{cli::FlakeUrl, nix::util::print_shell_command};
+use crate::nix::util::print_shell_command;
+
+use super::url::FlakeUrl;
 
 pub fn nix_flake_lock_check(url: &FlakeUrl) -> Result<()> {
     let args = [
