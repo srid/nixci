@@ -7,45 +7,44 @@ use crate::github::{self, PullRequest, PullRequestRef};
 
 /// A reference to some flake living somewhere
 #[derive(Debug, Clone)]
-pub struct FlakeRef {
-    kind: FlakeRefKind,
-    config: String,
-}
-
-#[derive(Debug, Clone)]
-pub enum FlakeRefKind {
+pub enum FlakeRef {
     /// A github PR
     GithubPR(PullRequestRef),
     /// A flake URL supported by Nix commands
-    Flake(String),
+    Flake { url: String, anchor: String },
 }
 
 impl FromStr for FlakeRef {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
-        let (s, config) = s.split_once('#').unwrap_or((s, "default"));
+        let (s, anchor) = s.split_once('#').unwrap_or((s, "default"));
 
-        Ok(Self {
-            kind: match github::PullRequestRef::from_web_url(s) {
-                Some(pr) => FlakeRefKind::GithubPR(pr),
-                None => FlakeRefKind::Flake(s.to_string()),
+        Ok(
+            match github::PullRequestRef::from_web_url(s, anchor.to_owned()) {
+                Some(pr) => FlakeRef::GithubPR(pr),
+                None => FlakeRef::Flake {
+                    url: s.to_string(),
+                    anchor: anchor.to_owned(),
+                },
             },
-            config: config.to_owned(),
-        })
+        )
     }
 }
 
 impl FlakeRef {
     /// Convert the value to a flake URL that Nix command will recognize.
     pub fn to_flake_url(&self) -> Result<String> {
-        match &self.kind {
-            FlakeRefKind::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
-            FlakeRefKind::Flake(url) => Ok(url.clone()),
+        match self {
+            FlakeRef::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
+            FlakeRef::Flake { url, .. } => Ok(url.clone()),
         }
     }
 
     pub fn config(&self) -> &str {
-        &self.config
+        match self {
+            FlakeRef::GithubPR(pr) => pr.config(),
+            FlakeRef::Flake { anchor, .. } => anchor,
+        }
     }
 }
 

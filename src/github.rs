@@ -11,6 +11,7 @@ pub struct PullRequestRef {
     owner: String,
     repo: String,
     pr: u64,
+    anchor: String,
 }
 
 impl PullRequestRef {
@@ -21,7 +22,7 @@ impl PullRequestRef {
         )
     }
     /// Parse a Github PR URL into its owner, repo, and PR number
-    pub fn from_web_url(url: &str) -> Option<Self> {
+    pub fn from_web_url(url: &str, anchor: String) -> Option<Self> {
         let url = Url::parse(url).ok()?;
         guard!(url.scheme() == "https" && url.host() == Some(Host::Domain("github.com")));
         let paths = url.path_segments().map(|c| c.collect::<Vec<_>>())?;
@@ -32,10 +33,15 @@ impl PullRequestRef {
                     owner: user.to_string(),
                     repo: repo.to_string(),
                     pr,
+                    anchor,
                 })
             }
             _ => None,
         }
+    }
+
+    pub fn config(&self) -> &str {
+        &self.anchor
     }
 }
 
