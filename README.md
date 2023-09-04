@@ -75,7 +75,7 @@ By default, `nixci` will build the top-level flake, but you can tell it to build
     };
 
     # Alternative configurations can be defined and subsequently selected via
-    # `nixci --config extra-tests .`
+    # `nixci .#extra-tests`
     extra-tests = {
         dir3 = {
             dir = "dir3";
