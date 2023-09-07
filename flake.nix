@@ -61,6 +61,8 @@
                     libiconv
                     openssl
                     pkgconfig
+                    # nix is required to run the tests
+                    nix
                   ];
                 };
               };
