@@ -13,6 +13,8 @@ where
     T: Default + serde::de::DeserializeOwned,
 {
     let output = Command::new("nix")
+        .arg("--extra-experimental-features")
+        .arg("nix-command flakes")
         .arg("eval")
         .arg(url.0)
         .arg("--json")

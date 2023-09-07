@@ -15,6 +15,7 @@ use super::util::print_shell_command;
 pub const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
 /// Nix derivation output path
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
 pub struct DrvOut(pub String);
 
 #[tokio::main]
@@ -22,6 +23,8 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut
     print_shell_command(DEVOUR_FLAKE, args.iter().map(|s| &**s));
     let mut output_fut = Command::new(DEVOUR_FLAKE)
         .args(args)
+        .arg("--extra-experimental-features")
+        .arg("nix-command flakes")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;
