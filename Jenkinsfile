@@ -6,7 +6,9 @@ pipeline {
         stage ('Build') {
             steps {
                 sh '''
-                    nixci . -- --option sandbox false
+                    # Build nixci, and then use it to build this project
+                    nix build
+                    ./result/bin/nixci . -- --option sandbox false
                 '''
             }
         }
