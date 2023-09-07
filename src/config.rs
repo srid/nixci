@@ -33,11 +33,11 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn from_flake_url(url: &FlakeUrl) -> Result<((String, Self), FlakeUrl)> {
+    pub async fn from_flake_url(url: &FlakeUrl) -> Result<((String, Self), FlakeUrl)> {
         let (url, attr) = url.split_attr();
         let name = attr.get_name();
         let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, name));
-        let cfg = nix::eval::nix_eval_attr_json::<Config>(nixci_url)?;
+        let cfg = nix::eval::nix_eval_attr_json::<Config>(nixci_url).await?;
         Ok(((name, cfg), url))
     }
 }
