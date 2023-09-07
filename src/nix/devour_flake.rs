@@ -15,6 +15,7 @@ use super::util::print_shell_command;
 pub const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
 /// Nix derivation output path
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
 pub struct DrvOut(pub String);
 
 #[tokio::main]
