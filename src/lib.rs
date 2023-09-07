@@ -13,7 +13,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     if args.verbose {
         eprintln!("DEBUG {args:?}");
     }
-    let url = args.flake_ref.to_flake_url()?;
+    let url = args.flake_ref.to_flake_url().await?;
     eprintln!("{}", format!("🍏 {}", url.0).bold());
 
     let ((cfg_name, cfg), url) = config::Config::from_flake_url(&url).await?;
@@ -27,7 +27,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
         let nix_args = subflake.nix_build_args_for_flake(&args, &url);
         eprintln!("🍎 {}", format!("{}.{}", cfg_name, subflake_name).italic());
         if subflake.override_inputs.is_empty() {
-            nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone()))?;
+            nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone())).await?;
         }
 
         let outs = nix::devour_flake::devour_flake(args.verbose, nix_args).await?;

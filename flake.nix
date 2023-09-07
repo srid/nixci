@@ -15,7 +15,7 @@
     flake-root.url = "github:srid/flake-root";
 
     # App dependenciues
-    devour-flake.url = "github:srid/devour-flake/v2";
+    devour-flake.url = "github:srid/devour-flake/master";
     devour-flake.flake = false;
   };
 
@@ -55,7 +55,7 @@
           ];
           args = {
             inherit src nativeBuildInputs;
-            DEVOUR_FLAKE = lib.getExe pkgs.devour-flake;
+            DEVOUR_FLAKE = inputs.devour-flake;
           };
           rustDevShell = pkgs.mkShell {
             shellHook = ''
@@ -72,9 +72,6 @@
             inherit system;
             overlays = [
               inputs.rust-overlay.overlays.default
-              (self: super: {
-                devour-flake = self.callPackage inputs.devour-flake { };
-              })
             ];
           };
 
@@ -83,6 +80,7 @@
           overlayAttrs.nixci = self'.packages.default;
 
           devShells.default = pkgs.mkShell {
+            name = "nixci";
             inputsFrom = [
               rustDevShell
               config.treefmt.build.devShell
@@ -90,11 +88,10 @@
               config.flake-root.devShell
             ];
             shellHook = ''
-              export DEVOUR_FLAKE=${lib.getExe pkgs.devour-flake}
+              export DEVOUR_FLAKE=${inputs.devour-flake}
             '';
             nativeBuildInputs = [
               pkgs.cargo-watch
-              pkgs.devour-flake
             ];
           };
 

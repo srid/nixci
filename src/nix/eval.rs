@@ -14,6 +14,7 @@ where
     let result = nix
         .run_with_args_expecting_json(&["eval", url.0.as_str(), "--json"])
         .await;
+    // TODO: Log command!
     match result {
         Ok(v) => Ok(v),
         Err(err) if error_is_missing_attribute(&err) => {

@@ -11,6 +11,7 @@
     - Iterate configs in a deterministic order
     - Pass `--extra-experimental-features` to enable flakes
     - `nixci` can now be used as a Rust library
+    - `nixci` no longer depends on `devour-flake` the *executable package*, only on the flake.
 
 # 0.1.3
 
