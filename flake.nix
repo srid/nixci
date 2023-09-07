@@ -46,30 +46,23 @@
             ];
           };
           craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
+          nativeBuildInputs = with pkgs; with pkgs.darwin.apple_sdk.frameworks; lib.optionals stdenv.isDarwin [
+            Security
+          ] ++ [
+            libiconv
+            openssl
+            pkgconfig
+          ];
           args = {
-            inherit src;
+            inherit src nativeBuildInputs;
             DEVOUR_FLAKE = lib.getExe pkgs.devour-flake;
-            nativeBuildInputs = with pkgs; with pkgs.darwin.apple_sdk.frameworks; lib.optionals stdenv.isDarwin [
-              Security
-            ] ++ [
-              libiconv
-              openssl
-              pkgconfig
-              # nix is required to run the tests
-              nix
-            ];
-            preCheck = ''
-              # For integration tests to work, otherwise get /homeless-shelter permission error
-              export HOME=$(mktemp -d)
-              export NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
-            '';
           };
           rustDevShell = pkgs.mkShell {
             shellHook = ''
               # For rust-analyzer 'hover' tooltips to work.
               export RUST_SRC_PATH="${rustToolchain}/lib/rustlib/src/rust/library";
             '';
-            nativeBuildInputs = [
+            nativeBuildInputs = nativeBuildInputs ++ [
               rustToolchain
             ];
           };
