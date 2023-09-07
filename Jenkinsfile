@@ -7,7 +7,8 @@ pipeline {
             steps {
                 sh '''
                     # Build nixci, and then use it to build this project
-                    nix build
+                    # Sandbox must be disabled for integration test (uses nix)
+                    nix --option sandbox false build 
                     ./result/bin/nixci . -- --option sandbox false
                 '''
             }
