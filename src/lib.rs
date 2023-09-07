@@ -8,6 +8,7 @@ use cli::CliArgs;
 use colored::Colorize;
 use nix::devour_flake::DrvOut;
 
+/// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 pub fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     if args.verbose {
         eprintln!("DEBUG {args:?}");
@@ -39,5 +40,6 @@ pub fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
             all_outs.extend(outs);
         }
     }
+    all_outs.sort();
     Ok(all_outs)
 }
