@@ -8,12 +8,15 @@ pipeline {
                 sh '''
                     # Build nixci, and then use it to build this project
 
-                    # Sandbox must be disabled for integration test (uses nix)
-                    # TODO: Need to make `nix run` work on Linux, still.
-
-                    nix --option sandbox false build 
-                    ./result/bin/nixci . -- --option sandbox false
-
+                    nix build 
+                    ./result/bin/nixci .
+                '''
+            }
+        }
+        stage ('Test') {
+            steps {
+                sh '''
+                    nix develop -c 'cargo test --test integration_test --features integration_test'
                 '''
             }
         }
