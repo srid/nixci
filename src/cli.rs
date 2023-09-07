@@ -57,6 +57,8 @@ pub struct CliArgs {
 
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![
+        "--extra-experimental-features".to_string(),
+        "nix-command flakes".to_string(),
         "--refresh".to_string(),
         "-j".to_string(),
         "auto".to_string(),
