@@ -3,7 +3,6 @@ pub mod config;
 pub mod github;
 pub mod nix;
 
-use anyhow::bail;
 use cli::CliArgs;
 use colored::Colorize;
 use nix::devour_flake::DrvOut;
@@ -31,14 +30,10 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
         }
 
         let outs = nix::devour_flake::devour_flake(args.verbose, nix_args).await?;
-        if outs.is_empty() {
-            bail!("Warn: devour-flake produced no outputs");
-        } else {
-            for out in &outs {
-                println!("{}", out.0.bold());
-            }
-            all_outs.extend(outs);
+        for out in &outs.0 {
+            println!("{}", out.0.bold());
         }
+        all_outs.extend(outs.0);
     }
     all_outs.sort();
     Ok(all_outs)
