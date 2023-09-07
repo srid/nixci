@@ -1,11 +1,9 @@
 //! Rust support for invoking https://github.com/srid/devour-flake
 
 use anyhow::{bail, Context, Result};
+use nix_rs::command::NixCmd;
 use std::process::Stdio;
-use tokio::{
-    io::{AsyncBufReadExt, BufReader},
-    process::Command,
-};
+use tokio::io::{AsyncBufReadExt, BufReader};
 
 use super::util::print_shell_command;
 
@@ -21,14 +19,21 @@ pub struct DrvOut(pub String);
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut>> {
     // TODO: Use nix_rs here as well
     // In the context of doing https://github.com/srid/nixci/issues/15
-    print_shell_command(DEVOUR_FLAKE, args.iter().map(|s| &**s));
-    let mut output_fut = Command::new(DEVOUR_FLAKE)
-        .args(args)
-        .arg("--extra-experimental-features")
-        .arg("nix-command flakes")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
+    let nix = NixCmd::default();
+    let mut cmd = nix.command();
+    let devour_flake_url = format!("{}#default", env!("DEVOUR_FLAKE"));
+    cmd.args(&[
+        "build",
+        &devour_flake_url,
+        "-L",
+        "--no-link",
+        "--print-out-paths",
+        "--override-input",
+        "flake",
+    ])
+    .args(args);
+    println!("Cmd: {:?}", cmd);
+    let mut output_fut = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
     let stderr_handle = output_fut.stderr.take().unwrap();
     tokio::spawn(async move {
         let mut reader = BufReader::new(stderr_handle).lines();
@@ -61,8 +66,10 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut
 ///
 /// It spits out drv outs built separated by whitespace.
 fn parse_devour_flake_output(stdout: Vec<u8>) -> Result<Vec<DrvOut>> {
-    let raw_output =
+    let output_filename =
         String::from_utf8(stdout).context("Failed to decode devour-flake output as UTF-8")?;
+    // Read output_filename, as newline separated strings
+    let raw_output = std::fs::read_to_string(output_filename.trim())?;
     let outs = raw_output.split_ascii_whitespace();
     Ok(outs.map(|s| DrvOut(s.to_string())).collect())
 }

@@ -13,7 +13,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     if args.verbose {
         eprintln!("DEBUG {args:?}");
     }
-    let url = args.flake_ref.to_flake_url()?;
+    let url = args.flake_ref.to_flake_url().await?;
     eprintln!("{}", format!("🍏 {}", url.0).bold());
 
     let ((cfg_name, cfg), url) = config::Config::from_flake_url(&url).await?;

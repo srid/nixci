@@ -63,8 +63,9 @@ pub struct Repo {
 
 impl PullRequest {
     /// Fetch the given PR using Github's API
-    pub fn get(ref_: &PullRequestRef) -> anyhow::Result<Self> {
-        api_get::<PullRequest>(ref_.api_url())
+    pub async fn get(ref_: &PullRequestRef) -> anyhow::Result<Self> {
+        let v = api_get::<PullRequest>(ref_.api_url()).await?;
+        Ok(v)
     }
 
     /// The flake URL referencing the branch of this PR
@@ -81,20 +82,22 @@ impl PullRequest {
 }
 
 /// Get an API response, parsing the response into the given type
-fn api_get<T>(url: String) -> anyhow::Result<T>
+async fn api_get<T>(url: String) -> anyhow::Result<T>
 where
     T: serde::de::DeserializeOwned,
 {
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::Client::new();
     let resp = client
         .get(&url)
         // Github API requires a user agent
         .header(USER_AGENT, "github.com/srid/nixci")
         .send()
+        .await
         .with_context(|| format!("cannot create request: {}", &url))?;
     if resp.status().is_success() {
         let v = resp
             .json::<T>()
+            .await
             .with_context(|| format!("cannot parse response: {}", &url))?;
         Ok(v)
     } else {

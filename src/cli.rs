@@ -30,9 +30,12 @@ impl FromStr for FlakeRef {
 
 impl FlakeRef {
     /// Convert the value to a flake URL that Nix command will recognize.
-    pub fn to_flake_url(&self) -> Result<FlakeUrl> {
+    pub async fn to_flake_url(&self) -> Result<FlakeUrl> {
         match self {
-            FlakeRef::GithubPR(pr) => Ok(PullRequest::get(pr)?.flake_url()),
+            FlakeRef::GithubPR(pr) => {
+                let pr = PullRequest::get(pr).await?;
+                Ok(pr.flake_url())
+            }
             FlakeRef::Flake(url) => Ok(url.clone()),
         }
     }
