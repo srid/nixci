@@ -58,6 +58,10 @@
               # nix is required to run the tests
               nix
             ];
+            preCheck = ''
+              # For integration tests to work, otherwise get /homeless-shelter permission error
+              export HOME=$(mktemp -d)
+            '';
           };
           rustDevShell = pkgs.mkShell {
             shellHook = ''

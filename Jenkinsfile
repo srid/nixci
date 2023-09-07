@@ -9,6 +9,7 @@ pipeline {
                     # Build nixci, and then use it to build this project
 
                     # Sandbox must be disabled for integration test (uses nix)
+                    # TODO: Need to make `nix run` work on Linux, still.
 
                     nix --option sandbox false build 
                     ./result/bin/nixci . -- --option sandbox false
