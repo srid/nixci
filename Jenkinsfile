@@ -20,6 +20,11 @@ pipeline {
                 '''
             }
         }
+        stage ('Build (legacy)') {
+            steps {
+                nixCI () // TODO: Remove this after migrating nixci in jenkins-nix-ci (for cachixPush to work)
+            }
+        }
         stage ('Cachix push') {
             when { branch 'master' }
             steps {
