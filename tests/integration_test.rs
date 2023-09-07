@@ -1,3 +1,7 @@
+//! Integration tests for nixci
+//!
+//! These tests are disabled by default (because they won't build in Nix
+//! sandbox), and must be manually enabled using the feature flag.
 #[cfg(feature = "integration_test")]
 mod integration_test {
     use clap::Parser;
