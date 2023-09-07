@@ -9,14 +9,14 @@ use colored::Colorize;
 use nix::devour_flake::DrvOut;
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
-pub fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
+pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     if args.verbose {
         eprintln!("DEBUG {args:?}");
     }
     let url = args.flake_ref.to_flake_url()?;
     eprintln!("{}", format!("🍏 {}", url.0).bold());
 
-    let ((cfg_name, cfg), url) = config::Config::from_flake_url(&url)?;
+    let ((cfg_name, cfg), url) = config::Config::from_flake_url(&url).await?;
     if args.verbose {
         eprintln!("DEBUG {cfg:?}");
     }
@@ -30,7 +30,7 @@ pub fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
             nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone()))?;
         }
 
-        let outs = nix::devour_flake::devour_flake(args.verbose, nix_args)?;
+        let outs = nix::devour_flake::devour_flake(args.verbose, nix_args).await?;
         if outs.is_empty() {
             bail!("Warn: devour-flake produced no outputs");
         } else {

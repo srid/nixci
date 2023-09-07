@@ -8,15 +8,15 @@ mod integration_test {
     use nixci::{self, cli, nix::devour_flake::DrvOut};
     use regex::Regex;
 
-    #[test]
+    #[tokio::test]
     /// A simple test, without config
-    fn test_haskell_multi_nix() -> anyhow::Result<()> {
+    async fn test_haskell_multi_nix() -> anyhow::Result<()> {
         let args = cli::CliArgs::parse_from(&[
             "nixci",
             "-v",
             "github:srid/haskell-multi-nix/c85563721c388629fa9e538a1d97274861bc8321",
         ]);
-        let outs = nixci::nixci(args)?;
+        let outs = nixci::nixci(args).await?;
         let expected = vec![
             "/nix/store/hsj8mwn9vzlyaxzmwyf111scisnjhlkb-bar-0.1.0.0/bin/bar",
             "/nix/store/3x2kpymc1qmd05da20wnmdyam38jkl7s-ghc-shell-for-packages-0",
@@ -32,16 +32,16 @@ mod integration_test {
         Ok(())
     }
 
-    #[test]
+    #[tokio::test]
     /// A test, with config
-    fn test_services_flake() -> anyhow::Result<()> {
+    async fn test_services_flake() -> anyhow::Result<()> {
         let args = cli::CliArgs::parse_from(&[
             "nixci",
             "-v",
             // TODO: Change after merging https://github.com/juspay/services-flake/pull/51
             "github:juspay/services-flake/3d764f19d0a121915447641fe49a9b8d02777ff8",
         ]);
-        let outs = nixci::nixci(args)?;
+        let outs = nixci::nixci(args).await?;
         let expected = vec![
             "/nix/store/6r5y4d7bmsqf0dk522rdkjd1q6ffiz2p-treefmt-check",
             "/nix/store/4h6zn33lk2zpb7ch4ljd7ik6fk4cqdyi-nix-shell",

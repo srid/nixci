@@ -18,8 +18,9 @@ pub const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
 pub struct DrvOut(pub String);
 
-#[tokio::main]
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut>> {
+    // TODO: Use nix_rs here as well
+    // In the context of doing https://github.com/srid/nixci/issues/15
     print_shell_command(DEVOUR_FLAKE, args.iter().map(|s| &**s));
     let mut output_fut = Command::new(DEVOUR_FLAKE)
         .args(args)
