@@ -31,6 +31,9 @@ urlencoding = "2.1.3"
 [dev-dependencies]
 regex = "1.9"
 
+[features]
+integration_test = []
+
 [profile.release]
 strip = true    # Automatically strip symbols from the binary.
 opt-level = "z" # Optimize for size.
