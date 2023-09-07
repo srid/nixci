@@ -5,7 +5,9 @@ pipeline {
     stages {
         stage ('Build') {
             steps {
-                nixCI ()
+                sh ''
+                    nixci . -- --option sandbox false
+                ''
             }
         }
         stage ('Cachix push') {
