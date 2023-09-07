@@ -10,6 +10,7 @@
 - Misc changes
     - Iterate configs in a deterministic order
     - Pass `--extra-experimental-features` to enable flakes
+    - `nixci` can now be used as a Rust library
 
 # 0.1.3
 

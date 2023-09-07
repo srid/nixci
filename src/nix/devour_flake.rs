@@ -23,6 +23,8 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<Vec<DrvOut
     print_shell_command(DEVOUR_FLAKE, args.iter().map(|s| &**s));
     let mut output_fut = Command::new(DEVOUR_FLAKE)
         .args(args)
+        .arg("--extra-experimental-features")
+        .arg("nix-command flakes")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;
