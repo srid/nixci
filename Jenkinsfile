@@ -16,7 +16,7 @@ pipeline {
         stage ('Test') {
             steps {
                 sh '''
-                    nix develop -c 'cargo test --test integration_test --features integration_test'
+                    nix develop -c cargo -- test --test integration_test --features integration_test
                 '''
             }
         }
