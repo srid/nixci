@@ -61,6 +61,7 @@
             preCheck = ''
               # For integration tests to work, otherwise get /homeless-shelter permission error
               export HOME=$(mktemp -d)
+              export NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
             '';
           };
           rustDevShell = pkgs.mkShell {
