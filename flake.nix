@@ -55,7 +55,7 @@
           ];
           args = {
             inherit src nativeBuildInputs;
-            DEVOUR_FLAKE = lib.getExe pkgs.devour-flake;
+            DEVOUR_FLAKE = inputs.devour-flake;
           };
           rustDevShell = pkgs.mkShell {
             shellHook = ''
