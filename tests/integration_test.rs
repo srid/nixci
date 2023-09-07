@@ -8,14 +8,14 @@ mod integration_test {
     use nixci::{self, cli, nix::devour_flake::DrvOut};
     use regex::Regex;
 
-    #[test]
-    fn test_haskell_multi_nix() -> anyhow::Result<()> {
+    #[tokio::test]
+    async fn test_haskell_multi_nix() -> anyhow::Result<()> {
         let args = cli::CliArgs::parse_from(&[
             "nixci",
             "-v",
             "github:srid/haskell-multi-nix/c85563721c388629fa9e538a1d97274861bc8321",
         ]);
-        let outs = nixci::nixci(args)?;
+        let outs = nixci::nixci(args).await?;
         let expected = vec![
             "/nix/store/hsj8mwn9vzlyaxzmwyf111scisnjhlkb-bar-0.1.0.0/bin/bar",
             "/nix/store/3x2kpymc1qmd05da20wnmdyam38jkl7s-ghc-shell-for-packages-0",

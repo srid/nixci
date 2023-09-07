@@ -10,23 +10,21 @@ pub async fn nix_eval_attr_json<T>(url: FlakeUrl) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
-    let cmd = NixCmd::default();
-    match cmd
+    let nix = NixCmd::default();
+    let result = nix
         .run_with_args_expecting_json(&["eval", url.0.as_str(), "--json"])
-        .await
-    {
+        .await;
+    match result {
         Ok(v) => Ok(v),
-        Err(err) => {
-            if error_is_missing_attribute(&err) {
-                // The 'nixci' flake output attr is missing. User wants the default config.
-                Ok(T::default())
-            } else {
-                Err(err)
-            }
+        Err(err) if error_is_missing_attribute(&err) => {
+            // The 'nixci' flake output attr is missing. User wants the default config.
+            Ok(T::default())
         }
+        Err(err) => Err(err),
     }
 }
 
+/// Check that [NixCmdError] is a missing attribute error
 fn error_is_missing_attribute(err: &NixCmdError) -> bool {
     match err {
         NixCmdError::CmdError(CommandError::ProcessFailed { stderr, .. }) => {
