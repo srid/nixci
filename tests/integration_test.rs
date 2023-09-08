@@ -8,6 +8,11 @@ mod integration_test {
     use nixci::{self, cli, nix::devour_flake::DrvOut};
     use regex::Regex;
 
+    #[ctor::ctor]
+    fn init() {
+        nixci::setup_logging(true);
+    }
+
     #[tokio::test]
     /// A simple test, without config
     async fn test_haskell_multi_nix() -> anyhow::Result<()> {

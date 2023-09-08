@@ -5,8 +5,6 @@ use nix_rs::command::NixCmd;
 use std::{process::Stdio, str::FromStr};
 use tokio::io::{AsyncBufReadExt, BufReader};
 
-use super::util::print_shell_command;
-
 /// Absolute path to the devour-flake executable
 ///
 /// We expect this environment to be set in Nix build and shell.
@@ -53,7 +51,7 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<DevourFlak
         "flake",
     ])
     .args(args);
-    print_shell_command(&cmd);
+    tracing::info!("️🏃️ Running command: {:?}", cmd);
     let mut output_fut = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
     let stderr_handle = output_fut.stderr.take().unwrap();
     tokio::spawn(async move {

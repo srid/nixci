@@ -3,38 +3,66 @@ pub mod config;
 pub mod github;
 pub mod nix;
 
+use std::io;
+
 use cli::CliArgs;
 use colored::Colorize;
-use nix::devour_flake::DrvOut;
+use nix::{
+    devour_flake::{DevourFlakeOutput, DrvOut},
+    url::FlakeUrl,
+};
+use tracing::{instrument, Level};
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
+#[instrument(name = "nixci", skip(args))]
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
-    if args.verbose {
-        eprintln!("DEBUG {args:?}");
-    }
+    tracing::debug!("Args: {args:?}");
     let url = args.flake_ref.to_flake_url().await?;
-    eprintln!("{}", format!("🍏 {}", url.0).bold());
+    tracing::info!("{}", format!("🍏 {}", url.0).bold());
 
     let ((cfg_name, cfg), url) = config::Config::from_flake_url(&url).await?;
-    if args.verbose {
-        eprintln!("DEBUG {cfg:?}");
-    }
+    tracing::debug!("Config: {cfg:?}");
 
     let mut all_outs = vec![];
 
     for (subflake_name, subflake) in &cfg.0 {
-        let nix_args = subflake.nix_build_args_for_flake(&args, &url);
-        eprintln!("🍎 {}", format!("{}.{}", cfg_name, subflake_name).italic());
-        if subflake.override_inputs.is_empty() {
-            nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone())).await?;
-        }
-
-        let outs = nix::devour_flake::devour_flake(args.verbose, nix_args).await?;
-        for out in &outs.0 {
-            println!("{}", out.0.bold());
-        }
+        tracing::info!("🍎 {}", format!("{}.{}", cfg_name, subflake_name).italic());
+        let outs = nixci_subflake(&args, &url, &subflake_name, &subflake).await?;
         all_outs.extend(outs.0);
     }
     all_outs.sort();
     Ok(all_outs)
+}
+
+#[instrument(skip(cli_args, url))]
+async fn nixci_subflake(
+    cli_args: &CliArgs,
+    url: &FlakeUrl,
+    subflake_name: &str,
+    subflake: &config::SubFlakish,
+) -> anyhow::Result<DevourFlakeOutput> {
+    let nix_args = subflake.nix_build_args_for_flake(cli_args, url);
+    if subflake.override_inputs.is_empty() {
+        nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone())).await?;
+    }
+
+    let outs = nix::devour_flake::devour_flake(cli_args.verbose, nix_args).await?;
+    for out in &outs.0 {
+        println!("{}", out.0.bold());
+    }
+    Ok(outs)
+}
+
+pub fn setup_logging(verbose: bool) {
+    let env_filter = if verbose { "nixci=debug" } else { "nixci=info" };
+    let builder = tracing_subscriber::fmt()
+        .with_writer(io::stderr)
+        .with_max_level(Level::INFO)
+        .with_env_filter(env_filter)
+        .compact();
+    if !verbose {
+        builder.without_time().init()
+    } else {
+        builder.init()
+    }
 }
