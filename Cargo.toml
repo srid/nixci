@@ -33,6 +33,7 @@ tracing = "0.1.37"
 
 [dev-dependencies]
 regex = "1.9"
+ctor = "0.2"
 
 [features]
 integration_test = []
