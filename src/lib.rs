@@ -3,12 +3,15 @@ pub mod config;
 pub mod github;
 pub mod nix;
 
+use std::io;
+
 use cli::CliArgs;
 use colored::Colorize;
 use nix::devour_flake::DrvOut;
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
+    setup_server_logging();
     if args.verbose {
         eprintln!("DEBUG {args:?}");
     }
@@ -37,4 +40,11 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     }
     all_outs.sort();
     Ok(all_outs)
+}
+
+pub fn setup_server_logging() {
+    tracing_subscriber::fmt()
+        .with_writer(io::stderr)
+        .compact()
+        .init();
 }
