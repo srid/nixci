@@ -33,6 +33,7 @@ impl Default for Config {
 }
 
 impl Config {
+    /// Read a flake URL with config attr, and return the original flake url along with the config.
     pub async fn from_flake_url(url: &FlakeUrl) -> Result<((String, Self), FlakeUrl)> {
         let (url, attr) = url.split_attr();
         let name = attr.get_name();

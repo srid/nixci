@@ -16,6 +16,7 @@ mod integration_test {
             "-v",
             "github:srid/haskell-multi-nix/c85563721c388629fa9e538a1d97274861bc8321",
         ]);
+        nixci::setup_logging(args.verbose);
         let outs = nixci::nixci(args).await?;
         let expected = vec![
             "/nix/store/hsj8mwn9vzlyaxzmwyf111scisnjhlkb-bar-0.1.0.0/bin/bar",
@@ -41,6 +42,7 @@ mod integration_test {
             // TODO: Change after merging https://github.com/juspay/services-flake/pull/51
             "github:juspay/services-flake/3d764f19d0a121915447641fe49a9b8d02777ff8",
         ]);
+        nixci::setup_logging(args.verbose);
         let outs = nixci::nixci(args).await?;
         let expected = vec![
             "/nix/store/6r5y4d7bmsqf0dk522rdkjd1q6ffiz2p-treefmt-check",
