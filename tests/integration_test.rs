@@ -73,14 +73,16 @@ mod integration_test {
 
     pub fn assert_same_drvs(drvs1: Vec<DrvOut>, drvs2: Vec<DrvOut>) {
         assert_eq!(drvs1.len(), drvs2.len());
-        let drv1 = drvs1
+        let mut drv1 = drvs1
             .into_iter()
             .map(|d| without_hash(&d))
             .collect::<Vec<_>>();
-        let drv2 = drvs2
+        let mut drv2 = drvs2
             .into_iter()
             .map(|d| without_hash(&d))
             .collect::<Vec<_>>();
+        drv1.sort();
+        drv2.sort();
         assert_eq!(drv1, drv2);
     }
 
