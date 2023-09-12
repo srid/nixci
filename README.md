@@ -11,6 +11,10 @@
 | nix-darwin             | `darwinConfigurations.*`                        |
 | home-manager           | `legacyPackages.${system}.homeConfigurations.*` |
 
+The [stdout] of `nixci` will be a list of store paths built.
+
+[stdout]: https://en.wikipedia.org/wiki/Standard_streams#Standard_output_(stdout)
+
 ## Install
 
 ### From nixpkgs
@@ -87,10 +91,11 @@ Some real-world examples of how nixci is used with specific configurations:
 
 ## What it does
 
-- Accepts a flake config (`nixci`) that optionally specifies all the sub-flakes to build, along with their input overrides
-- Checks that `flake.lock` is in sync
-- Runs [devour-flake](https://github.com/srid/devour-flake) to build all flake outputs
-- Prints the built outputs
+- Optionally, accept a flake config (`nixci.default`) to indicate sub-flakes to build, along with their input overrides
+- Check that `flake.lock` is in sync
+- Use [devour-flake](https://github.com/srid/devour-flake) to build all flake outputs
+    - Support for [flake-schemas](https://github.com/srid/devour-flake/pull/11) is planned
+- Print the built outputs to stdout
 
 [devour-flake]: https://github.com/srid/devour-flake
 
