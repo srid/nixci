@@ -2,7 +2,7 @@ use nix_rs::command::{CommandError, NixCmd, NixCmdError};
 
 use super::url::FlakeUrl;
 
-/// Run 'nix eval <url> --json` and parse its JSON
+/// Run `nix eval <url> --json` and parse its JSON
 ///
 /// If the flake does not output the given attribute, use the `Default`
 /// implementation of `T`.

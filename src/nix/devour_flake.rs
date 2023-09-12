@@ -1,4 +1,4 @@
-//! Rust support for invoking https://github.com/srid/devour-flake
+//! Rust support for invoking <https://github.com/srid/devour-flake>
 
 use anyhow::{bail, Context, Result};
 use nix_rs::command::NixCmd;
