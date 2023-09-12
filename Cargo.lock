@@ -761,9 +761,9 @@ dependencies = [
 
 [[package]]
 name = "nix_rs"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ada25d08b8a8bc8b3321bf1561cba460ca9ea873db4abf1660b7ba0ee357b772"
+checksum = "640389ae56d34b0dd72b5345b82c548b4f544ba577b21abbafbf13f045438503"
 dependencies = [
  "cfg-if",
  "colored",
@@ -771,6 +771,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
+ "shell-words",
  "thiserror",
  "tokio",
  "tracing",
@@ -1204,6 +1205,12 @@ checksum = "900fba806f70c630b0a382d0d825e17a0f19fcd059a2ade1ff237bcddf446b31"
 dependencies = [
  "lazy_static",
 ]
+
+[[package]]
+name = "shell-words"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
 name = "signal-hook-registry"
