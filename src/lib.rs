@@ -3,7 +3,7 @@ pub mod config;
 pub mod github;
 pub mod nix;
 
-use std::io;
+use std::{collections::HashSet, io};
 
 use cli::CliArgs;
 use colored::Colorize;
@@ -23,15 +23,14 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     let ((cfg_name, cfg), url) = config::Config::from_flake_url(&url).await?;
     tracing::debug!("Config: {cfg:?}");
 
-    let mut all_outs = vec![];
+    let mut all_outs = HashSet::new();
 
     for (subflake_name, subflake) in &cfg.0 {
         tracing::info!("🍎 {}", format!("{}.{}", cfg_name, subflake_name).italic());
         let outs = nixci_subflake(&args, &url, &subflake_name, &subflake).await?;
         all_outs.extend(outs.0);
     }
-    all_outs.sort();
-    Ok(all_outs)
+    Ok(all_outs.into_iter().collect())
 }
 
 #[instrument(skip(cli_args, url))]

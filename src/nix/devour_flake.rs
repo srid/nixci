@@ -2,7 +2,7 @@
 
 use anyhow::{bail, Context, Result};
 use nix_rs::command::NixCmd;
-use std::{process::Stdio, str::FromStr};
+use std::{collections::HashSet, process::Stdio, str::FromStr};
 use tokio::io::{AsyncBufReadExt, BufReader};
 
 /// Absolute path to the devour-flake executable
@@ -10,7 +10,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 /// We expect this environment to be set in Nix build and shell.
 pub const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
-pub struct DevourFlakeOutput(pub Vec<DrvOut>);
+pub struct DevourFlakeOutput(pub HashSet<DrvOut>);
 
 impl FromStr for DevourFlakeOutput {
     type Err = anyhow::Error;
@@ -19,7 +19,7 @@ impl FromStr for DevourFlakeOutput {
         // Read output_filename, as newline separated strings
         let raw_output = std::fs::read_to_string(output_filename)?;
         let outs = raw_output.split_ascii_whitespace();
-        let outs: Vec<DrvOut> = outs.map(|s| DrvOut(s.to_string())).collect();
+        let outs: HashSet<DrvOut> = outs.map(|s| DrvOut(s.to_string())).collect();
         if outs.is_empty() {
             bail!(
                 "devour-flake produced an outpath ({}) with no outputs",

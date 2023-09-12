@@ -9,10 +9,11 @@
     - Fix nixci breaking if branch name of a PR has `#` (#17)
 - Misc changes
     - Iterate configs in a deterministic order
+    - stdout outputs are uniquely printed, in sorted order
+    - stderr output is now logged using the `tracing` crate.
     - Pass `--extra-experimental-features` to enable flakes
     - `nixci` can now be used as a Rust library
     - `nixci` no longer depends on `devour-flake` the *executable package*, only on the flake.
-    - stderr outputs are now logged using the `tracing` crate.
 
 # 0.1.3
 
