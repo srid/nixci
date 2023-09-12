@@ -8,11 +8,11 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     crane.url = "github:ipetkov/crane";
     crane.inputs.nixpkgs.follows = "nixpkgs";
+    cargo-doc-live.url = "github:srid/cargo-doc-live";
+    process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
 
     # Dev tools
     treefmt-nix.url = "github:numtide/treefmt-nix";
-    mission-control.url = "github:Platonic-Systems/mission-control";
-    flake-root.url = "github:srid/flake-root";
 
     # App dependenciues
     devour-flake.url = "github:srid/devour-flake/master";
@@ -24,9 +24,9 @@
       systems = import inputs.systems;
       imports = [
         inputs.flake-parts.flakeModules.easyOverlay
+        inputs.cargo-doc-live.flakeModule
+        inputs.process-compose-flake.flakeModule
         inputs.treefmt-nix.flakeModule
-        inputs.mission-control.flakeModule
-        inputs.flake-root.flakeModule
       ];
 
       perSystem = { config, self', pkgs, lib, system, ... }:
@@ -84,14 +84,15 @@
             inputsFrom = [
               rustDevShell
               config.treefmt.build.devShell
-              config.mission-control.devShell
-              config.flake-root.devShell
             ];
             shellHook = ''
+
               export DEVOUR_FLAKE=${inputs.devour-flake}
             '';
             nativeBuildInputs = [
+              pkgs.just
               pkgs.cargo-watch
+              config.process-compose.cargo-doc-live.outputs.package
             ];
           };
 
@@ -102,30 +103,6 @@
             programs = {
               nixpkgs-fmt.enable = true;
               rustfmt.enable = true;
-            };
-          };
-
-          # Makefile'esque but in Nix. Add your dev scripts here.
-          # cf. https://github.com/Platonic-Systems/mission-control
-          mission-control.scripts = {
-            fmt = {
-              exec = config.treefmt.build.wrapper;
-              description = "Auto-format project tree";
-            };
-
-            run = {
-              exec = ''
-                cargo run "$@"
-              '';
-              description = "Run the project executable";
-            };
-
-            watch = {
-              exec = ''
-                set -x
-                cargo watch -x "run -- $*"
-              '';
-              description = "Watch for changes and run the project executable";
             };
           };
         };
