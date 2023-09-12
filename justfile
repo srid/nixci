@@ -15,7 +15,7 @@ alias w := watch
 
 # Run tests
 test:
-    cargo watch -x test
+    cargo watch -s "cargo test -F integration_test"
 
 # Run docs server (live reloading)
 doc:
