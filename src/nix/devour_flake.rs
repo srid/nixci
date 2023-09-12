@@ -51,7 +51,7 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<DevourFlak
         "flake",
     ])
     .args(args);
-    tracing::info!("️🏃️ Running command: {:?}", cmd);
+    nix_rs::command::trace_cmd(&cmd);
     let mut output_fut = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
     let stderr_handle = output_fut.stderr.take().unwrap();
     tokio::spawn(async move {

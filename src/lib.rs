@@ -53,7 +53,11 @@ async fn nixci_subflake(
 }
 
 pub fn setup_logging(verbose: bool) {
-    let env_filter = if verbose { "nixci=debug" } else { "nixci=info" };
+    let env_filter = if verbose {
+        "nixci=debug,nix_rs=debug"
+    } else {
+        "nixci=info,nix_rs=info"
+    };
     let builder = tracing_subscriber::fmt()
         .with_writer(io::stderr)
         .with_max_level(Level::INFO)

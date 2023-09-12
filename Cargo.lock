@@ -761,11 +761,12 @@ dependencies = [
 
 [[package]]
 name = "nix_rs"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d195d07c84c3d1b311b1468f7fbef5c07c21007c850ea6c084f08c1bfbff0771"
+checksum = "ada25d08b8a8bc8b3321bf1561cba460ca9ea873db4abf1660b7ba0ee357b772"
 dependencies = [
  "cfg-if",
+ "colored",
  "regex",
  "serde",
  "serde_json",
