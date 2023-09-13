@@ -1,5 +1,5 @@
 
-# Unreleased
+# 0.2.0
 
 - Breaking changes
     - Change flake schema: evaluates `nixci.default` instead of `nixci`; this allows more than one configuration (#20)
