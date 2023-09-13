@@ -10,7 +10,7 @@ mod integration_test {
 
     #[ctor::ctor]
     fn init() {
-        nixci::setup_logging(true);
+        nixci::logging::setup_logging(true);
     }
 
     #[tokio::test]
