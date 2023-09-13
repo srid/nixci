@@ -1,9 +1,10 @@
 pub mod cli;
 pub mod config;
 pub mod github;
+pub mod logging;
 pub mod nix;
 
-use std::{collections::HashSet, io};
+use std::collections::HashSet;
 
 use cli::CliArgs;
 use colored::Colorize;
@@ -11,7 +12,7 @@ use nix::{
     devour_flake::{DevourFlakeOutput, DrvOut},
     url::FlakeUrl,
 };
-use tracing::{instrument, Level};
+use tracing::instrument;
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 #[instrument(name = "nixci", skip(args))]
@@ -50,22 +51,4 @@ async fn nixci_subflake(
         println!("{}", out.0.bold());
     }
     Ok(outs)
-}
-
-pub fn setup_logging(verbose: bool) {
-    let env_filter = if verbose {
-        "nixci=debug,nix_rs=debug"
-    } else {
-        "nixci=info,nix_rs=info"
-    };
-    let builder = tracing_subscriber::fmt()
-        .with_writer(io::stderr)
-        .with_max_level(Level::INFO)
-        .with_env_filter(env_filter)
-        .compact();
-    if !verbose {
-        builder.without_time().init()
-    } else {
-        builder.init()
-    }
 }
