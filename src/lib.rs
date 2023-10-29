@@ -9,7 +9,11 @@ use std::collections::HashSet;
 use cli::CliArgs;
 use colored::Colorize;
 use nix::devour_flake::{DevourFlakeOutput, DrvOut};
-use nix_rs::flake::url::FlakeUrl;
+use nix_rs::{
+    command::{NixCmd, NixCmdError},
+    config::NixConfig,
+    flake::{system::System, url::FlakeUrl},
+};
 use tracing::instrument;
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
@@ -24,10 +28,16 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
 
     let mut all_outs = HashSet::new();
 
+    let system = get_current_system().await?;
+
     for (subflake_name, subflake) in &cfg.0 {
         tracing::info!("🍎 {}", format!("{}.{}", cfg_name, subflake_name).italic());
-        let outs = nixci_subflake(&args, &url, &subflake_name, &subflake).await?;
-        all_outs.extend(outs.0);
+        if subflake.can_build_on(&system) {
+            let outs = nixci_subflake(&args, &url, &subflake_name, &subflake).await?;
+            all_outs.extend(outs.0);
+        } else {
+            tracing::info!("🍊 {}", "skipped".dimmed());
+        }
     }
     Ok(all_outs.into_iter().collect())
 }
@@ -49,4 +59,9 @@ async fn nixci_subflake(
         println!("{}", out.0.bold());
     }
     Ok(outs)
+}
+
+async fn get_current_system() -> Result<System, NixCmdError> {
+    let config = NixConfig::from_nix(&NixCmd::default()).await?;
+    Ok(config.system.value)
 }
