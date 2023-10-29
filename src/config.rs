@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use anyhow::Result;
-use nix_rs::flake::{eval::nix_eval_attr_json, url::FlakeUrl};
+use nix_rs::flake::{eval::nix_eval_attr_json, system::System, url::FlakeUrl};
 use serde::Deserialize;
 
 use crate::cli::CliArgs;
@@ -55,6 +55,9 @@ pub struct SubFlakish {
     // inputs in a determinitstic (i.e. asciibetical) order
     #[serde(rename = "overrideInputs", default)]
     pub override_inputs: BTreeMap<String, FlakeUrl>,
+
+    /// An optional whitelist of systems to build on (others are ignored)
+    pub systems: Option<Vec<System>>,
 }
 
 impl Default for SubFlakish {
@@ -63,11 +66,19 @@ impl Default for SubFlakish {
         SubFlakish {
             dir: ".".to_string(),
             override_inputs: BTreeMap::default(),
+            systems: None,
         }
     }
 }
 
 impl SubFlakish {
+    pub fn can_build_on(&self, system: &System) -> bool {
+        match self.systems.as_ref() {
+            Some(systems_whitelist) => systems_whitelist.contains(&system),
+            None => true,
+        }
+    }
+
     /// Return the `nix build` arguments for building all the outputs in this
     /// subflake configuration.
     pub fn nix_build_args_for_flake(
