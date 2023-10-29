@@ -1,12 +1,10 @@
 use std::collections::BTreeMap;
 
 use anyhow::Result;
+use nix_rs::flake::{eval::nix_eval_attr_json, url::FlakeUrl};
 use serde::Deserialize;
 
-use crate::{
-    cli::CliArgs,
-    nix::{self, url::FlakeUrl},
-};
+use crate::cli::CliArgs;
 
 /// Rust type for the `nixci` flake output
 ///
@@ -38,7 +36,7 @@ impl Config {
         let (url, attr) = url.split_attr();
         let name = attr.get_name();
         let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, name));
-        let cfg = nix::eval::nix_eval_attr_json::<Config>(nixci_url).await?;
+        let cfg = nix_eval_attr_json::<Config>(&nixci_url).await?;
         Ok(((name, cfg), url))
     }
 }

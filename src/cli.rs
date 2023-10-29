@@ -2,11 +2,9 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use clap::Parser;
+use nix_rs::flake::url::FlakeUrl;
 
-use crate::{
-    github::{self, PullRequest, PullRequestRef},
-    nix::url::FlakeUrl,
-};
+use crate::github::{self, PullRequest, PullRequestRef};
 
 /// A reference to some flake living somewhere
 #[derive(Debug, Clone, PartialEq, Eq)]
