@@ -48,6 +48,7 @@
           craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
           nativeBuildInputs = with pkgs; with pkgs.darwin.apple_sdk.frameworks; lib.optionals stdenv.isDarwin [
             Security
+            SystemConfiguration
           ] ++ [
             libiconv
             openssl

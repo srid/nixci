@@ -8,10 +8,8 @@ use std::collections::HashSet;
 
 use cli::CliArgs;
 use colored::Colorize;
-use nix::{
-    devour_flake::{DevourFlakeOutput, DrvOut},
-    url::FlakeUrl,
-};
+use nix::devour_flake::{DevourFlakeOutput, DrvOut};
+use nix_rs::flake::url::FlakeUrl;
 use tracing::instrument;
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.

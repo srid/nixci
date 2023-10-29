@@ -1,9 +1,7 @@
 use std::process::Stdio;
 
 use anyhow::{bail, Result};
-use nix_rs::command::NixCmd;
-
-use super::url::FlakeUrl;
+use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 
 /// Make sure that the `flake.lock` file is in sync.
 pub async fn nix_flake_lock_check(url: &FlakeUrl) -> Result<()> {

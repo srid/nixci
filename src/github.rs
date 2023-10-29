@@ -1,11 +1,10 @@
 /// Enough types to get branch info from Pull Request URL
 use anyhow::{bail, Context};
+use nix_rs::flake::url::FlakeUrl;
 use reqwest::header::USER_AGENT;
 use serde::Deserialize;
 use try_guard::guard;
 use url::{Host, Url};
-
-use crate::nix::url::FlakeUrl;
 
 /// A reference to a Github Pull Request
 #[derive(Debug, Clone, PartialEq, Eq)]
