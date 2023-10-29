@@ -1,4 +1,8 @@
 
+# Unreleased
+
+- Added new config, `nixci.*.*.systems`, to specify an optional whitelist to restrict the systems to build.
+
 # 0.2.0
 
 - Breaking changes
