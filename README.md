@@ -1,6 +1,7 @@
 # nixci
 
 [![Crates.io](https://img.shields.io/crates/v/nixci.svg)](https://crates.io/crates/nixci)
+[![Harmeless Code of Conduct](https://img.shields.io/badge/harmless-8A2BE2)](https://srid.ca/coc "This project follows the 'Harmlessness Code of Conduct'")
 
 `nixci` builds all outputs in a flake, or optionally its [sub-flakes](https://github.com/hercules-ci/flake-parts/issues/119), which can in turn be used either in CI or locally. Using [devour-flake] it will automatically build the following outputs:
 
