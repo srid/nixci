@@ -100,6 +100,10 @@ Some real-world examples of how nixci is used with specific configurations:
 
 [devour-flake]: https://github.com/srid/devour-flake
 
+## Discussion
+
+For discussion of nixci, please post in our [Zulip](https://nixos.zulipchat.com/#narrow/stream/413950-nix).
+
 ## See also
 
 - [jenkins-nix-ci](https://github.com/juspay/jenkins-nix-ci) - Jenkins NixOS module that supports `nixci` as a Groovy function
