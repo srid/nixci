@@ -58,7 +58,7 @@ Add the following to your workflow file,
         uses: DeterminateSystems/nix-installer-action@main
       - uses: yaxitech/nix-install-pkgs-action@v3
         with:
-          packages: "nixpkgs#nixci"
+          packages: "github:srid/nixci"
       - run: nixci
 ```
 
