@@ -18,12 +18,6 @@ The [stdout] of `nixci` will be a list of store paths built.
 
 ## Install
 
-### From nixpkgs
-
-```sh
-nix run nixpkgs#nixci
-```
-
 ### From source
 
 > **Note** 
