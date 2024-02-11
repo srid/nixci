@@ -2,6 +2,7 @@
 # Unreleased
 
 - Added new config, `nixci.*.*.systems`, to specify an optional whitelist to restrict the systems to build.
+- Fix regression in Nix 2.19+ (`devour-flake produced an outpath with no outputs`) (\#35)
 
 # 0.2.0
 
