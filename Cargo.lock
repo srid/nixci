@@ -792,7 +792,8 @@ dependencies = [
 [[package]]
 name = "nix_rs"
 version = "0.2.3"
-source = "git+https://github.com/juspay/nix-browser.git?branch=nix_rs_dir_fix#556b0dc7615f6612257546b74c9494a991265303"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a18f6606788c363ffe0251a1922aa4c3bae819e59696448eaa88a6ac3e38ee28"
 dependencies = [
  "bytesize",
  "cfg-if",
