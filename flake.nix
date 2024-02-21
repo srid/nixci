@@ -15,7 +15,7 @@
     treefmt-nix.url = "github:numtide/treefmt-nix";
 
     # App dependenciues
-    devour-flake.url = "github:srid/devour-flake/master";
+    devour-flake.url = "github:srid/devour-flake/os-system-match";
     devour-flake.flake = false;
   };
 
