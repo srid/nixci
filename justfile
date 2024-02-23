@@ -7,7 +7,7 @@ fmt:
 
 alias f := fmt
 
-# Run the project locally
+# Run the project locally (eg: `j watch ~/code/yourproject`)
 watch *ARGS:
     cargo watch -s "cargo run -- {{ARGS}}"
 
