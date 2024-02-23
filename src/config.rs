@@ -72,9 +72,9 @@ impl Default for SubFlakish {
 }
 
 impl SubFlakish {
-    pub fn can_build_on(&self, system: &System) -> bool {
+    pub fn can_build_on(&self, systems: &Vec<System>) -> bool {
         match self.systems.as_ref() {
-            Some(systems_whitelist) => systems_whitelist.contains(&system),
+            Some(systems_whitelist) => systems_whitelist.iter().any(|s| systems.contains(s)),
             None => true,
         }
     }

@@ -2,7 +2,11 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use clap::Parser;
-use nix_rs::flake::url::FlakeUrl;
+use nix_rs::{
+    command::{NixCmd, NixCmdError},
+    config::NixConfig,
+    flake::{system::System, url::FlakeUrl},
+};
 
 use crate::github::{self, PullRequest, PullRequestRef};
 
@@ -56,6 +60,12 @@ pub struct CliArgs {
     #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,
 
+    /// The systems list to build for. If empty, build for current system.
+    ///
+    /// Must be a flake reference
+    #[arg(long, default_value = "github:srid/empty")]
+    pub build_systems: FlakeUrl,
+
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![
         "--refresh".to_string(),
@@ -63,6 +73,45 @@ pub struct CliArgs {
         "auto".to_string(),
     ])]
     pub extra_nix_build_args: Vec<String>,
+}
+
+impl CliArgs {
+    pub async fn get_build_systems(&self) -> Result<Vec<System>> {
+        // Nix eval, and then return the systems
+        let build_systems = nix_import_flake::<Vec<System>>(&self.build_systems).await?;
+        if build_systems.is_empty() {
+            let current_system = get_current_system().await?;
+            Ok(vec![current_system])
+        } else {
+            Ok(build_systems)
+        }
+    }
+}
+
+async fn get_current_system() -> Result<System, NixCmdError> {
+    let config = NixConfig::from_nix(&NixCmd::default()).await?;
+    Ok(config.system.value)
+}
+
+pub async fn nix_import_flake<T>(url: &FlakeUrl) -> Result<T, NixCmdError>
+where
+    T: Default + serde::de::DeserializeOwned,
+{
+    let flake_path =
+        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0)).await?;
+    let v = nix_eval_impure_expr(format!("import {}", flake_path)).await?;
+    Ok(v)
+}
+
+async fn nix_eval_impure_expr<T>(expr: String) -> Result<T, NixCmdError>
+where
+    T: Default + serde::de::DeserializeOwned,
+{
+    let nix = NixCmd::default();
+    let v = nix
+        .run_with_args_expecting_json::<T>(&["eval", "--impure", "--json", "--expr", &expr])
+        .await?;
+    Ok(v)
 }
 
 #[cfg(test)]

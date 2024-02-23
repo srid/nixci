@@ -9,11 +9,7 @@ use std::collections::HashSet;
 use cli::CliArgs;
 use colored::Colorize;
 use nix::devour_flake::{DevourFlakeOutput, DrvOut};
-use nix_rs::{
-    command::{NixCmd, NixCmdError},
-    config::NixConfig,
-    flake::{system::System, url::FlakeUrl},
-};
+use nix_rs::flake::url::FlakeUrl;
 use tracing::instrument;
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
@@ -28,11 +24,11 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
 
     let mut all_outs = HashSet::new();
 
-    let system = get_current_system().await?;
+    let systems = args.get_build_systems().await?;
 
     for (subflake_name, subflake) in &cfg.0 {
         tracing::info!("🍎 {}", format!("{}.{}", cfg_name, subflake_name).italic());
-        if subflake.can_build_on(&system) {
+        if subflake.can_build_on(&systems) {
             let outs = nixci_subflake(&args, &url, &subflake_name, &subflake).await?;
             all_outs.extend(outs.0);
         } else {
@@ -49,19 +45,19 @@ async fn nixci_subflake(
     subflake_name: &str,
     subflake: &config::SubFlakish,
 ) -> anyhow::Result<DevourFlakeOutput> {
-    let nix_args = subflake.nix_build_args_for_flake(cli_args, url);
+    let mut nix_args = subflake.nix_build_args_for_flake(cli_args, url);
     if subflake.override_inputs.is_empty() {
         nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone())).await?;
     }
+    nix_args.extend([
+        "--override-input".to_string(),
+        "systems".to_string(),
+        cli_args.build_systems.0.clone(),
+    ]);
 
     let outs = nix::devour_flake::devour_flake(cli_args.verbose, nix_args).await?;
     for out in &outs.0 {
         println!("{}", out.0.bold());
     }
     Ok(outs)
-}
-
-async fn get_current_system() -> Result<System, NixCmdError> {
-    let config = NixConfig::from_nix(&NixCmd::default()).await?;
-    Ok(config.system.value)
 }
