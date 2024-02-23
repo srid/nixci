@@ -57,22 +57,7 @@ async fn nixci_subflake(
 
     let outs = nix::devour_flake::devour_flake(cli_args.verbose, nix_args).await?;
     for out in &outs.0 {
-        println_flush_other!("{}", out.0.bold());
+        println!("{}", out.0.bold());
     }
     Ok(outs)
-}
-
-// Like println!() but flushes stdout/stderr
-//
-// This is to avoid interleaving output with `tracing` crate.
-#[macro_export]
-macro_rules! println_flush_other {
-    ($($arg:tt)*) => {
-        {
-            use std::io::Write;
-            std::io::stderr().flush().unwrap();
-            println!($($arg)*);
-            std::io::stdout().flush().unwrap();
-        }
-    }
 }
