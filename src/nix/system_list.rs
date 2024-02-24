@@ -34,3 +34,31 @@ where
         .await?;
     Ok(v)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_empty_systems_list() {
+        let systems = SystemsList::from_flake(&FlakeUrl("github:nix-systems/empty".to_string()))
+            .await
+            .unwrap();
+        assert_eq!(systems.0, vec![]);
+    }
+
+    #[tokio::test]
+    async fn test_systems_list() {
+        let systems =
+            SystemsList::from_flake(&FlakeUrl("github:nix-systems/default-darwin".to_string()))
+                .await
+                .unwrap();
+        assert_eq!(
+            systems.0,
+            vec![
+                System::Darwin(nix_rs::flake::system::Arch::Aarch64),
+                System::Darwin(nix_rs::flake::system::Arch::X86_64)
+            ]
+        );
+    }
+}
