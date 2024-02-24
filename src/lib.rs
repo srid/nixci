@@ -45,16 +45,11 @@ async fn nixci_subflake(
     subflake_name: &str,
     subflake: &config::SubFlakish,
 ) -> anyhow::Result<DevourFlakeOutput> {
-    let mut nix_args = subflake.nix_build_args_for_flake(cli_args, url);
     if subflake.override_inputs.is_empty() {
         nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone())).await?;
     }
-    nix_args.extend([
-        "--override-input".to_string(),
-        "systems".to_string(),
-        cli_args.build_systems.0.clone(),
-    ]);
 
+    let nix_args = subflake.nix_build_args_for_flake(cli_args, url);
     let outs = nix::devour_flake::devour_flake(cli_args.verbose, nix_args).await?;
     for out in &outs.0 {
         println!("{}", out.0.bold());

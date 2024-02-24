@@ -79,7 +79,7 @@ impl SubFlakish {
         }
     }
 
-    /// Return the `nix build` arguments for building all the outputs in this
+    /// Return the devour-flake `nix build` arguments for building all the outputs in this
     /// subflake configuration.
     pub fn nix_build_args_for_flake(
         &self,
@@ -97,6 +97,11 @@ impl SubFlakish {
                     v.0.to_string(),
                 ]
             }))
+            .chain([
+                "--override-input".to_string(),
+                "systems".to_string(),
+                cli_args.build_systems.0.clone(),
+            ])
             .chain(cli_args.extra_nix_build_args.iter().cloned())
             .collect()
     }
