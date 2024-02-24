@@ -8,7 +8,10 @@ use nix_rs::{
     flake::{system::System, url::FlakeUrl},
 };
 
-use crate::github::{self, PullRequest, PullRequestRef};
+use crate::{
+    github::{self, PullRequest, PullRequestRef},
+    nix::system_list::SystemsList,
+};
 
 /// A reference to some flake living somewhere
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -62,9 +65,11 @@ pub struct CliArgs {
 
     /// The systems list to build for. If empty, build for current system.
     ///
-    /// Must be a flake reference
+    /// Must be a flake reference which, when imported, must return a Nix list
+    /// of systems. You may use one of the lists from
+    /// https://github.com/nix-systems.
     #[arg(long, default_value = "github:nix-systems/empty")]
-    pub build_systems: FlakeUrl,
+    pub build_systems_from: FlakeUrl,
 
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![
@@ -77,13 +82,12 @@ pub struct CliArgs {
 
 impl CliArgs {
     pub async fn get_build_systems(&self) -> Result<Vec<System>> {
-        // Nix eval, and then return the systems
-        let build_systems = nix_import_flake::<Vec<System>>(&self.build_systems).await?;
-        if build_systems.is_empty() {
+        let systems = SystemsList::from_flake(&self.build_systems_from).await?.0;
+        if systems.is_empty() {
             let current_system = get_current_system().await?;
             Ok(vec![current_system])
         } else {
-            Ok(build_systems)
+            Ok(systems)
         }
     }
 }
@@ -91,27 +95,6 @@ impl CliArgs {
 async fn get_current_system() -> Result<System, NixCmdError> {
     let config = NixConfig::from_nix(&NixCmd::default()).await?;
     Ok(config.system.value)
-}
-
-pub async fn nix_import_flake<T>(url: &FlakeUrl) -> Result<T, NixCmdError>
-where
-    T: Default + serde::de::DeserializeOwned,
-{
-    let flake_path =
-        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0)).await?;
-    let v = nix_eval_impure_expr(format!("import {}", flake_path)).await?;
-    Ok(v)
-}
-
-async fn nix_eval_impure_expr<T>(expr: String) -> Result<T, NixCmdError>
-where
-    T: Default + serde::de::DeserializeOwned,
-{
-    let nix = NixCmd::default();
-    let v = nix
-        .run_with_args_expecting_json::<T>(&["eval", "--impure", "--json", "--expr", &expr])
-        .await?;
-    Ok(v)
 }
 
 #[cfg(test)]
