@@ -63,7 +63,7 @@ pub struct CliArgs {
     /// The systems list to build for. If empty, build for current system.
     ///
     /// Must be a flake reference
-    #[arg(long, default_value = "github:srid/empty")]
+    #[arg(long, default_value = "github:nix-systems/empty")]
     pub build_systems: FlakeUrl,
 
     /// Additional arguments to pass through to `nix build`
