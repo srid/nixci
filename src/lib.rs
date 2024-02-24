@@ -52,7 +52,7 @@ async fn nixci_subflake(
     nix_args.extend([
         "--override-input".to_string(),
         "systems".to_string(),
-        cli_args.build_systems_from.0.clone(),
+        cli_args.build_systems.0.clone(),
     ]);
 
     let outs = nix::devour_flake::devour_flake(cli_args.verbose, nix_args).await?;

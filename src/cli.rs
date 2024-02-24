@@ -69,7 +69,7 @@ pub struct CliArgs {
     /// of systems. You may use one of the lists from
     /// https://github.com/nix-systems.
     #[arg(long, default_value = "github:nix-systems/empty")]
-    pub build_systems_from: FlakeUrl,
+    pub build_systems: FlakeUrl,
 
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![
@@ -82,7 +82,7 @@ pub struct CliArgs {
 
 impl CliArgs {
     pub async fn get_build_systems(&self) -> Result<Vec<System>> {
-        let systems = SystemsList::from_flake(&self.build_systems_from).await?.0;
+        let systems = SystemsList::from_flake(&self.build_systems).await?.0;
         if systems.is_empty() {
             let current_system = get_current_system().await?;
             Ok(vec![current_system])
