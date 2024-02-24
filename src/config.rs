@@ -72,14 +72,14 @@ impl Default for SubFlakish {
 }
 
 impl SubFlakish {
-    pub fn can_build_on(&self, system: &System) -> bool {
+    pub fn can_build_on(&self, systems: &Vec<System>) -> bool {
         match self.systems.as_ref() {
-            Some(systems_whitelist) => systems_whitelist.contains(&system),
+            Some(systems_whitelist) => systems_whitelist.iter().any(|s| systems.contains(s)),
             None => true,
         }
     }
 
-    /// Return the `nix build` arguments for building all the outputs in this
+    /// Return the devour-flake `nix build` arguments for building all the outputs in this
     /// subflake configuration.
     pub fn nix_build_args_for_flake(
         &self,
@@ -97,6 +97,11 @@ impl SubFlakish {
                     v.0.to_string(),
                 ]
             }))
+            .chain([
+                "--override-input".to_string(),
+                "systems".to_string(),
+                cli_args.build_systems.0.clone(),
+            ])
             .chain(cli_args.extra_nix_build_args.iter().cloned())
             .collect()
     }

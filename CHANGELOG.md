@@ -4,6 +4,7 @@
 - Added new config, `nixci.*.*.systems`, to specify an optional whitelist to restrict the systems to build.
 - Fix regression in Nix 2.19+ (`devour-flake produced an outpath with no outputs`) (\#35)
 - Evaluate OS configurations for current system only (\#38)
+- Allow building on multiple systems (\#39)
 
 # 0.2.0
 

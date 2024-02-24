@@ -2,9 +2,16 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use clap::Parser;
-use nix_rs::flake::url::FlakeUrl;
+use nix_rs::{
+    command::{NixCmd, NixCmdError},
+    config::NixConfig,
+    flake::{system::System, url::FlakeUrl},
+};
 
-use crate::github::{self, PullRequest, PullRequestRef};
+use crate::{
+    github::{self, PullRequest, PullRequestRef},
+    nix::system_list::SystemsList,
+};
 
 /// A reference to some flake living somewhere
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,6 +63,14 @@ pub struct CliArgs {
     #[arg(default_value = ".")]
     pub flake_ref: FlakeRef,
 
+    /// The systems list to build for. If empty, build for current system.
+    ///
+    /// Must be a flake reference which, when imported, must return a Nix list
+    /// of systems. You may use one of the lists from
+    /// https://github.com/nix-systems.
+    #[arg(long, default_value = "github:nix-systems/empty")]
+    pub build_systems: FlakeUrl,
+
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![
         "--refresh".to_string(),
@@ -63,6 +78,23 @@ pub struct CliArgs {
         "auto".to_string(),
     ])]
     pub extra_nix_build_args: Vec<String>,
+}
+
+impl CliArgs {
+    pub async fn get_build_systems(&self) -> Result<Vec<System>> {
+        let systems = SystemsList::from_flake(&self.build_systems).await?.0;
+        if systems.is_empty() {
+            let current_system = get_current_system().await?;
+            Ok(vec![current_system])
+        } else {
+            Ok(systems)
+        }
+    }
+}
+
+async fn get_current_system() -> Result<System, NixCmdError> {
+    let config = NixConfig::from_nix(&NixCmd::default()).await?;
+    Ok(config.system.value)
 }
 
 #[cfg(test)]
