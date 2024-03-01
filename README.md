@@ -88,7 +88,8 @@ Some real-world examples of how nixci is used with specific configurations:
 
 - [services-flake](https://github.com/juspay/services-flake/blob/197fc1c4d07d09f4e01dd935450608c35393b102/flake.nix#L10-L24)
 - [nixos-flake](https://github.com/srid/nixos-flake/blob/4af32875e7cc6df440c5f5cf93c67af41902768b/flake.nix#L29-L45)
-- [haskell-flake](https://github.com/srid/haskell-flake/blob/4decea13dfe55a636d87d7fefe2aaa469a3b2ae2/flake.nix#L15-L46)
+- [haskell-flake](https://github.com/srid/haskell-flake/blob/d128c7329bfc73c3eeef90f6d215d0ccd7baf78c/flake.nix#L15-L67)
+    - Here's [a blog post](https://twitter.com/sridca/status/1763528379188265314) that talks about how it is used in haskell-flake
 
 ## What it does
 
