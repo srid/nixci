@@ -24,7 +24,7 @@ To install, run `nix profile install github:srid/nixci`. You can also use use `n
 
 ## Usage
 
-`nixci` accepts any valid [flake URL](https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html#url-like-syntax) or a Github PR URL.
+`nixci` accepts any valid [flake URL](https://nixos.asia/en/flake-url) or a Github PR URL.
 
 ```sh
 # Run nixci on a local flake (default is $PWD)
