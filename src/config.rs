@@ -36,7 +36,7 @@ impl Config {
         let (url, attr) = url.split_attr();
         let name = attr.get_name();
         let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, name));
-        let cfg = nix_eval_attr_json::<Config>(&nixci_url).await?;
+        let cfg = nix_eval_attr_json::<Config>(&nixci_url, attr.is_none()).await?;
         Ok(((name, cfg), url))
     }
 }

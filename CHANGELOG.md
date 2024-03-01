@@ -7,6 +7,7 @@
 - Fixes
     - Fix regression in Nix 2.19+ (`devour-flake produced an outpath with no outputs`) (\#35)
     - Evaluate OS configurations for current system only (\#38)
+    - Fail correctly if nixci is passed a missing flake attribute (\#43)
 
 # 0.2.0
 
