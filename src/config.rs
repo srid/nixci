@@ -18,10 +18,10 @@ use crate::cli::CliArgs;
 /// }
 // NB: we use BTreeMap instead of HashMap here so that we always iterate
 // configs in a determinitstic (i.e. asciibetical) order
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Config {
     /// The flake.nix configuration
-    pub subflakes: BTreeMap<String, SubFlakish>,
+    pub subflakes: Subflakes,
 
     /// The URL to the flake containing this configuration
     pub flake_url: FlakeUrl,
@@ -31,12 +31,19 @@ pub struct Config {
 
     /// Selected sub-flake if any.
     ///
-    /// Must be a ke in `subflakes`.
+    /// Must be a key in `subflakes`.
     pub selected_subflake: Option<String>,
 }
 
 impl Config {
-    /// Read a flake URL with config attr, and return the original flake url along with the config.
+    /// Create a `Config` pointed to by this [FlakeUrl]
+    ///
+    /// Example:
+    /// ```text
+    /// let url = FlakeUrl("github:srid/haskell-flake#default.dev".to_string());
+    /// let cfg = Config::from_flake_url(&url).await?;
+    /// ```
+    /// along with the config.
     pub async fn from_flake_url(url: &FlakeUrl) -> Result<Config> {
         let (flake_url, attr) = url.split_attr();
         let nested_attr = attr.as_list();
@@ -47,10 +54,9 @@ impl Config {
             _ => anyhow::bail!("Invalid flake URL (too many nested attr): {}", flake_url.0),
         };
         let nixci_url = FlakeUrl(format!("{}#nixci.{}", flake_url.0, name));
-        let subflakes =
-            nix_eval_attr_json::<BTreeMap<String, SubFlakish>>(&nixci_url, attr.is_none()).await?;
+        let subflakes = nix_eval_attr_json::<Subflakes>(&nixci_url, attr.is_none()).await?;
         if let Some(sub_flake_name) = selected_subflake.clone() {
-            if !subflakes.contains_key(&sub_flake_name) {
+            if !subflakes.0.contains_key(&sub_flake_name) {
                 anyhow::bail!(
                     "Sub-flake '{}' not found in nixci configuration '{}'",
                     sub_flake_name,
@@ -65,6 +71,17 @@ impl Config {
             selected_subflake,
         };
         Ok(cfg)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Subflakes(pub BTreeMap<String, SubFlakish>);
+
+impl Default for Subflakes {
+    fn default() -> Self {
+        let mut subflakes = BTreeMap::new();
+        subflakes.insert("<root>".to_string(), SubFlakish::default());
+        Subflakes(subflakes)
     }
 }
 
@@ -131,5 +148,25 @@ impl SubFlakish {
             ])
             .chain(cli_args.extra_nix_build_args.iter().cloned())
             .collect()
+    }
+}
+
+#[cfg(test)]
+#[cfg(feature = "integration_test")]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_config_loading() {
+        // Testing this flake:
+        // https://github.com/srid/haskell-flake/blob/76214cf8b0d77ed763d1f093ddce16febaf07365/flake.nix#L15-L67
+        let url = &FlakeUrl(
+            "github:srid/haskell-flake/76214cf8b0d77ed763d1f093ddce16febaf07365#default.dev"
+                .to_string(),
+        );
+        let cfg = Config::from_flake_url(url).await.unwrap();
+        assert_eq!(cfg.name, "default");
+        assert_eq!(cfg.selected_subflake, Some("dev".to_string()));
+        assert_eq!(cfg.subflakes.0.len(), 7);
     }
 }
