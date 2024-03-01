@@ -78,6 +78,7 @@ impl Config {
 pub struct Subflakes(pub BTreeMap<String, SubFlakish>);
 
 impl Default for Subflakes {
+    /// Default value contains a single entry for the root flake.
     fn default() -> Self {
         let mut subflakes = BTreeMap::new();
         subflakes.insert("<root>".to_string(), SubFlakish::default());
