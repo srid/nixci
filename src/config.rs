@@ -20,37 +20,37 @@ use crate::cli::CliArgs;
 // configs in a determinitstic (i.e. asciibetical) order
 #[derive(Debug, Deserialize)]
 pub struct Config {
+    /// The flake.nix configuration
     pub subflakes: BTreeMap<String, SubFlakish>,
-}
 
-impl Default for Config {
-    /// Default value contains a single entry for the root flake.
-    fn default() -> Self {
-        let mut subflakes = BTreeMap::new();
-        subflakes.insert("<root>".to_string(), SubFlakish::default());
-        Config { subflakes }
-    }
+    /// The URL to the flake containing this configuration
+    pub flake_url: FlakeUrl,
+
+    /// Configuration name (nixci.<name>)
+    pub name: String,
+
+    /// Selected sub-flake if any.
+    ///
+    /// Must be a ke in `subflakes`.
+    pub selected_subflake: Option<String>,
 }
 
 impl Config {
     /// Read a flake URL with config attr, and return the original flake url along with the config.
-    pub async fn from_flake_url(
-        url: &FlakeUrl,
-    ) -> Result<(((String, Option<String>), Self), FlakeUrl)> {
-        let (url, attr) = url.split_attr();
+    pub async fn from_flake_url(url: &FlakeUrl) -> Result<Config> {
+        let (flake_url, attr) = url.split_attr();
         let nested_attr = attr.as_list();
-        let (name, sub_flake) = match nested_attr.as_slice() {
-            [] => ("default", None),
-            [name] => (name.as_str(), None),
-            [name, sub_flake] => (name.as_str(), Some(sub_flake)),
-            _ => anyhow::bail!("Invalid flake URL (too many nested attr): {}", url.0),
+        let (name, selected_subflake) = match nested_attr.as_slice() {
+            [] => ("default".to_string(), None),
+            [name] => (name.clone(), None),
+            [name, sub_flake] => (name.clone(), Some(sub_flake.to_string())),
+            _ => anyhow::bail!("Invalid flake URL (too many nested attr): {}", flake_url.0),
         };
-        let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, name));
+        let nixci_url = FlakeUrl(format!("{}#nixci.{}", flake_url.0, name));
         let subflakes =
             nix_eval_attr_json::<BTreeMap<String, SubFlakish>>(&nixci_url, attr.is_none()).await?;
-        let cfg = Config { subflakes };
-        if let Some(sub_flake_name) = sub_flake {
-            if !cfg.subflakes.contains_key(sub_flake_name) {
+        if let Some(sub_flake_name) = selected_subflake.clone() {
+            if !subflakes.contains_key(&sub_flake_name) {
                 anyhow::bail!(
                     "Sub-flake '{}' not found in nixci configuration '{}'",
                     sub_flake_name,
@@ -58,7 +58,13 @@ impl Config {
                 )
             }
         }
-        Ok((((name.to_string(), sub_flake.cloned()), cfg), url))
+        let cfg = Config {
+            subflakes,
+            flake_url,
+            name,
+            selected_subflake,
+        };
+        Ok(cfg)
     }
 }
 

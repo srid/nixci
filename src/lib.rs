@@ -19,7 +19,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     let url = args.flake_ref.to_flake_url().await?;
     tracing::info!("{}", format!("🍏 {}", url.0).bold());
 
-    let (((cfg_name, chosen_sub_flake), cfg), url) = config::Config::from_flake_url(&url).await?;
+    let cfg = config::Config::from_flake_url(&url).await?;
     tracing::debug!("Config: {cfg:?}");
 
     let mut all_outs = HashSet::new();
@@ -27,8 +27,9 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     let systems = args.get_build_systems().await?;
 
     for (subflake_name, subflake) in &cfg.subflakes {
-        let name = format!("{}.{}", cfg_name, subflake_name).italic();
-        if chosen_sub_flake
+        let name = format!("{}.{}", cfg.name, subflake_name).italic();
+        if cfg
+            .selected_subflake
             .as_ref()
             .is_some_and(|s| s != subflake_name)
         {
