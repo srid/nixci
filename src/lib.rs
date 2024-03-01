@@ -19,7 +19,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     let url = args.flake_ref.to_flake_url().await?;
     tracing::info!("{}", format!("🍏 {}", url.0).bold());
 
-    let ((cfg_name, cfg), url) = config::Config::from_flake_url(&url).await?;
+    let (((cfg_name, chosen_sub_flake), cfg), url) = config::Config::from_flake_url(&url).await?;
     tracing::debug!("Config: {cfg:?}");
 
     let mut all_outs = HashSet::new();
@@ -27,12 +27,24 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     let systems = args.get_build_systems().await?;
 
     for (subflake_name, subflake) in &cfg.0 {
-        tracing::info!("🍎 {}", format!("{}.{}", cfg_name, subflake_name).italic());
+        let name = format!("{}.{}", cfg_name, subflake_name).italic();
+        if chosen_sub_flake
+            .as_ref()
+            .is_some_and(|s| s != subflake_name)
+        {
+            tracing::info!("🍊 {} {}", name, "skipped (deselected out)".dimmed());
+            continue;
+        }
+        tracing::info!("🍎 {}", name);
         if subflake.can_build_on(&systems) {
             let outs = nixci_subflake(&args, &url, &subflake_name, &subflake).await?;
             all_outs.extend(outs.0);
         } else {
-            tracing::info!("🍊 {}", "skipped".dimmed());
+            tracing::info!(
+                "🍊 {} {}",
+                name,
+                "skipped (cannot build on this system)".dimmed()
+            );
         }
     }
     Ok(all_outs.into_iter().collect())

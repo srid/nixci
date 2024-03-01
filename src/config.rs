@@ -32,12 +32,29 @@ impl Default for Config {
 
 impl Config {
     /// Read a flake URL with config attr, and return the original flake url along with the config.
-    pub async fn from_flake_url(url: &FlakeUrl) -> Result<((String, Self), FlakeUrl)> {
+    pub async fn from_flake_url(
+        url: &FlakeUrl,
+    ) -> Result<(((String, Option<String>), Self), FlakeUrl)> {
         let (url, attr) = url.split_attr();
-        let name = attr.get_name();
+        let nested_attr = attr.as_list();
+        let (name, sub_flake) = match nested_attr.as_slice() {
+            [] => ("default", None),
+            [name] => (name.as_str(), None),
+            [name, sub_flake] => (name.as_str(), Some(sub_flake)),
+            _ => anyhow::bail!("Invalid flake URL (too many nested attr): {}", url.0),
+        };
         let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, name));
         let cfg = nix_eval_attr_json::<Config>(&nixci_url, attr.is_none()).await?;
-        Ok(((name, cfg), url))
+        if let Some(sub_flake_name) = sub_flake {
+            if !cfg.0.contains_key(sub_flake_name) {
+                anyhow::bail!(
+                    "Sub-flake '{}' not found in nixci configuration '{}'",
+                    sub_flake_name,
+                    nixci_url
+                )
+            }
+        }
+        Ok((((name.to_string(), sub_flake.cloned()), cfg), url))
     }
 }
 
