@@ -20,12 +20,6 @@ The [stdout] of `nixci` will be a list of store paths built.
 
 ### From source
 
-> **Note** 
->
-> To make use of the binary cache, first run:
->
-> `nix run nixpkgs#cachix use srid`
-
 To install, run `nix profile install github:srid/nixci`. You can also use use `nix run github:srid/nixci` to run `nixci` directly off this repo without installing it.
 
 ## Usage
