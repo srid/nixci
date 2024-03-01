@@ -26,7 +26,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
 
     let systems = args.get_build_systems().await?;
 
-    for (subflake_name, subflake) in &cfg.0 {
+    for (subflake_name, subflake) in &cfg.subflakes {
         let name = format!("{}.{}", cfg_name, subflake_name).italic();
         if chosen_sub_flake
             .as_ref()

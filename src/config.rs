@@ -6,9 +6,9 @@ use serde::Deserialize;
 
 use crate::cli::CliArgs;
 
-/// Rust type for the `nixci` flake output
+/// The `nixci` configuration encoded in flake.nix
 ///
-/// Example `flake.nix` output this type expects:
+/// Example flake.nix:
 /// ```nix
 /// {
 ///   nixci.test = {
@@ -19,14 +19,16 @@ use crate::cli::CliArgs;
 // NB: we use BTreeMap instead of HashMap here so that we always iterate
 // configs in a determinitstic (i.e. asciibetical) order
 #[derive(Debug, Deserialize)]
-pub struct Config(pub BTreeMap<String, SubFlakish>);
+pub struct Config {
+    pub subflakes: BTreeMap<String, SubFlakish>,
+}
 
 impl Default for Config {
     /// Default value contains a single entry for the root flake.
     fn default() -> Self {
-        let mut m = BTreeMap::new();
-        m.insert("<root>".to_string(), SubFlakish::default());
-        Config(m)
+        let mut subflakes = BTreeMap::new();
+        subflakes.insert("<root>".to_string(), SubFlakish::default());
+        Config { subflakes }
     }
 }
 
@@ -44,9 +46,11 @@ impl Config {
             _ => anyhow::bail!("Invalid flake URL (too many nested attr): {}", url.0),
         };
         let nixci_url = FlakeUrl(format!("{}#nixci.{}", url.0, name));
-        let cfg = nix_eval_attr_json::<Config>(&nixci_url, attr.is_none()).await?;
+        let subflakes =
+            nix_eval_attr_json::<BTreeMap<String, SubFlakish>>(&nixci_url, attr.is_none()).await?;
+        let cfg = Config { subflakes };
         if let Some(sub_flake_name) = sub_flake {
-            if !cfg.0.contains_key(sub_flake_name) {
+            if !cfg.subflakes.contains_key(sub_flake_name) {
                 anyhow::bail!(
                     "Sub-flake '{}' not found in nixci configuration '{}'",
                     sub_flake_name,
