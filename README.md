@@ -35,6 +35,10 @@ $ nixci github:hercules-ci/hercules-ci-agent
 
 # Run nixci on a github PR
 $ nixci https://github.com/srid/emanote/pull/451
+
+# Run only the selected sub-flake
+$ git clone https://github.com/srid/haskell-flake && cd haskell-flake
+$ nixci .#default.dev
 ```
 
 ### Using in Github Actions
