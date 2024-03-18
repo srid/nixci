@@ -136,6 +136,7 @@ impl SubFlakish {
         flake_url: &FlakeUrl,
     ) -> Vec<String> {
         std::iter::once(flake_url.sub_flake_url(self.dir.clone()).0)
+            // FIXME: This currently applies on devour-flake, but we want it to apply on user flake.
             .chain(
                 self.inputs_from
                     .as_ref()
