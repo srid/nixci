@@ -101,6 +101,9 @@ pub struct SubFlakish {
     #[serde(rename = "overrideInputs", default)]
     pub override_inputs: BTreeMap<String, FlakeUrl>,
 
+    #[serde(rename = "inputsFrom", default)]
+    pub inputs_from: Option<FlakeUrl>,
+
     /// An optional whitelist of systems to build on (others are ignored)
     pub systems: Option<Vec<System>>,
 }
@@ -111,6 +114,7 @@ impl Default for SubFlakish {
         SubFlakish {
             dir: ".".to_string(),
             override_inputs: BTreeMap::default(),
+            inputs_from: Option::default(),
             systems: None,
         }
     }
@@ -132,6 +136,15 @@ impl SubFlakish {
         flake_url: &FlakeUrl,
     ) -> Vec<String> {
         std::iter::once(flake_url.sub_flake_url(self.dir.clone()).0)
+            .chain(
+                self.inputs_from
+                    .as_ref()
+                    .map_or_else(|| vec![], |v| vec![v])
+                    .iter()
+                    .flat_map(|other_flake| {
+                        ["--inputs-from".to_string(), other_flake.0.to_string()]
+                    }),
+            )
             .chain(self.override_inputs.iter().flat_map(|(k, v)| {
                 [
                     "--override-input".to_string(),
