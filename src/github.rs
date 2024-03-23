@@ -109,7 +109,7 @@ where
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GitHubMatrixRow {
     #[serde(rename = "build-system")]
-    pub build_system: String,
+    pub system: String,
     pub subflake: String,
 }
 
@@ -123,10 +123,12 @@ pub(crate) async fn dump_github_actions_matrix(
     systems: Vec<System>,
 ) -> anyhow::Result<()> {
     let mut rows = vec![];
+    // TODO: Should take into account systems whitelist
+    // Ref: https://github.com/srid/nixci/blob/efc77c8794e5972617874edd96afa8dd4f1a75b2/src/config.rs#L104-L105
     for system in systems {
         for (subflake_name, _subflake) in &cfg.subflakes.0 {
             let row = GitHubMatrixRow {
-                build_system: system.to_string(),
+                system: system.to_string(),
                 subflake: subflake_name.to_string(),
             };
             rows.push(row);
