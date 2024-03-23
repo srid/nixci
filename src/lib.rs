@@ -16,17 +16,10 @@ use tracing::instrument;
 #[instrument(name = "nixci", skip(args))]
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     tracing::debug!("Args: {args:?}");
+    let (url, cfg) = args.command.get_config().await?;
     match args.command {
-        cli::Command::Build(build_cfg) => {
-            let url = build_cfg.flake_ref.to_flake_url().await?;
-            tracing::info!("{}", format!("🍏 {}", url.0).bold());
-            let cfg = config::Config::from_flake_url(&url).await?;
-            tracing::debug!("Config: {cfg:?}");
-            nixci_build(args.verbose, &build_cfg, &url, &cfg).await
-        }
-        cli::Command::DumpGithubActionsMatrix { flake_ref, systems } => {
-            let url = flake_ref.to_flake_url().await?;
-            let cfg = config::Config::from_flake_url(&url).await?;
+        cli::Command::Build(build_cfg) => nixci_build(args.verbose, &build_cfg, &url, &cfg).await,
+        cli::Command::DumpGithubActionsMatrix { systems, .. } => {
             github::dump_github_actions_matrix(&cfg, systems).await?;
             // TODO: Return something meaningful, or break the function.
             Ok(vec![])

@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 use nix_rs::{
     command::{NixCmd, NixCmdError},
     config::NixConfig,
@@ -9,6 +10,7 @@ use nix_rs::{
 };
 
 use crate::{
+    config,
     github::{self, PullRequest, PullRequestRef},
     nix::system_list::{SystemFlakeUrl, SystemsList},
 };
@@ -76,6 +78,21 @@ pub enum Command {
         #[arg(long, value_parser, value_delimiter = ',')]
         systems: Vec<System>,
     },
+}
+
+impl Command {
+    /// Get the nixci [config::Config] associated with this subcommand
+    pub async fn get_config(&self) -> anyhow::Result<(FlakeUrl, config::Config)> {
+        let flake_ref = match self {
+            Command::Build(build_cfg) => &build_cfg.flake_ref,
+            Command::DumpGithubActionsMatrix { flake_ref, .. } => flake_ref,
+        };
+        let url = flake_ref.to_flake_url().await?;
+        tracing::info!("{}", format!("🍏 {}", url.0).bold());
+        let cfg = config::Config::from_flake_url(&url).await?;
+        tracing::debug!("Config: {cfg:?}");
+        Ok((url, cfg))
+    }
 }
 
 #[derive(Parser, Debug)]
