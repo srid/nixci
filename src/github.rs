@@ -112,20 +112,26 @@ pub struct GitHubMatrixRow {
     pub subflake: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GitHubMatrix {
+    pub include: Vec<GitHubMatrixRow>,
+}
+
 pub(crate) async fn dump_github_actions_matrix(
     cfg: &Config,
     systems: Vec<System>,
 ) -> anyhow::Result<()> {
-    let mut matrix = vec![];
+    let mut rows = vec![];
     for system in systems {
         for (subflake_name, _subflake) in &cfg.subflakes.0 {
             let row = GitHubMatrixRow {
                 build_system: system.to_string(),
                 subflake: subflake_name.to_string(),
             };
-            matrix.push(row);
+            rows.push(row);
         }
     }
+    let matrix = GitHubMatrix { include: rows };
     println!("{}", serde_json::to_string(&matrix)?);
     Ok(())
 }
