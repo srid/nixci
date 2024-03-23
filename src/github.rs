@@ -108,7 +108,6 @@ where
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GitHubMatrixRow {
-    #[serde(rename = "build-system")]
     pub system: String,
     pub subflake: String,
 }
@@ -117,6 +116,8 @@ pub struct GitHubMatrixRow {
 pub struct GitHubMatrix {
     pub include: Vec<GitHubMatrixRow>,
 }
+
+
 
 pub(crate) async fn dump_github_actions_matrix(
     cfg: &Config,

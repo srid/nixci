@@ -43,6 +43,8 @@ $ nixci .#default.dev
 
 ### Using in Github Actions
 
+#### Standard Runners
+
 Add the following to your workflow file,
 
 ```yaml
@@ -56,6 +58,28 @@ Add the following to your workflow file,
         with:
           packages: "github:srid/nixci"
       - run: nixci
+```
+
+#### Self-hosted Runners with Job Matrix
+
+```yaml
+jobs:
+  configure:
+    runs-on: self-hosted
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+     - uses: actions/checkout@v4
+     - id: set-matrix
+       run: echo "matrix=$(nixci dump-github-actions-matrix --systems=aarch64-linux,aarch64-darwin | jq -c .)" >> $GITHUB_OUTPUT
+  nix:
+    runs-on: self-hosted
+    needs: configure
+    strategy:
+      matrix: ${{ fromJson(needs.configure.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: nixci build --build-systems "github:nix-systems/${{ matrix.system }}" .#default.${{ matrix.subflake}}
 ```
 
 ## Configuring
