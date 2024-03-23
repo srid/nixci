@@ -1,6 +1,6 @@
 /// Enough types to get branch info from Pull Request URL
 use anyhow::{bail, Context};
-use nix_rs::flake::url::FlakeUrl;
+use nix_rs::flake::{system::System, url::FlakeUrl};
 use reqwest::header::USER_AGENT;
 use serde::{Deserialize, Serialize};
 use try_guard::guard;
@@ -112,14 +112,19 @@ pub struct GitHubMatrixRow {
     pub subflake: String,
 }
 
-pub(crate) async fn dump_github_actions_matrix(cfg: &Config) -> anyhow::Result<()> {
+pub(crate) async fn dump_github_actions_matrix(
+    cfg: &Config,
+    systems: Vec<System>,
+) -> anyhow::Result<()> {
     let mut matrix = vec![];
-    for (subflake_name, _subflake) in &cfg.subflakes.0 {
-        let row = GitHubMatrixRow {
-            build_system: "nix".to_string(),
-            subflake: subflake_name.to_string(),
-        };
-        matrix.push(row);
+    for system in systems {
+        for (subflake_name, _subflake) in &cfg.subflakes.0 {
+            let row = GitHubMatrixRow {
+                build_system: system.to_string(),
+                subflake: subflake_name.to_string(),
+            };
+            matrix.push(row);
+        }
     }
     println!("{}", serde_json::to_string(&matrix)?);
     Ok(())

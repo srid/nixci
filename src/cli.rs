@@ -71,6 +71,10 @@ pub enum Command {
         /// TODO: DRY (see BuildConfig)
         #[arg(default_value = ".")]
         flake_ref: FlakeRef,
+
+        /// Systems to include in the matrix
+        #[arg(long, value_parser, value_delimiter = ',')]
+        systems: Vec<System>,
     },
 }
 

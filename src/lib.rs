@@ -24,10 +24,10 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
             tracing::debug!("Config: {cfg:?}");
             nixci_build(args.verbose, &build_cfg, &url, &cfg).await
         }
-        cli::Command::DumpGithubActionsMatrix { flake_ref } => {
+        cli::Command::DumpGithubActionsMatrix { flake_ref, systems } => {
             let url = flake_ref.to_flake_url().await?;
             let cfg = config::Config::from_flake_url(&url).await?;
-            github::dump_github_actions_matrix(&cfg).await?;
+            github::dump_github_actions_matrix(&cfg, systems).await?;
             // TODO: Return something meaningful, or break the function.
             Ok(vec![])
         }
