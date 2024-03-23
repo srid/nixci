@@ -108,6 +108,7 @@ where
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GitHubMatrixRow {
+    #[serde(rename = "build-system")]
     pub build_system: String,
     pub subflake: String,
 }
