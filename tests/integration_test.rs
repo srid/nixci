@@ -19,6 +19,7 @@ mod integration_test {
         let args = cli::CliArgs::parse_from(&[
             "nixci",
             "-v",
+            "build",
             "github:srid/haskell-multi-nix/c85563721c388629fa9e538a1d97274861bc8321",
         ]);
         let outs = nixci::nixci(args).await?;
@@ -41,6 +42,7 @@ mod integration_test {
         let args = cli::CliArgs::parse_from(&[
             "nixci",
             "-v",
+            "build",
             // TODO: Change after merging https://github.com/juspay/services-flake/pull/51
             "github:juspay/services-flake/3d764f19d0a121915447641fe49a9b8d02777ff8",
         ]);
