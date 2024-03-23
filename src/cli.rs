@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use nix_rs::{
     command::{NixCmd, NixCmdError},
     config::NixConfig,
@@ -56,13 +56,26 @@ pub struct CliArgs {
     #[arg(short = 'v')]
     pub verbose: bool,
 
-    /// Flake URL or github URL
-    ///
-    /// A specific nixci` configuration can be specified
-    /// using '#': e.g. `nixci .#extra-tests`
-    #[arg(default_value = ".")]
-    pub flake_ref: FlakeRef,
+    #[clap(subcommand)]
+    pub command: Command,
+}
 
+#[derive(Debug, Subcommand)]
+pub enum Command {
+    Build(BuildConfig),
+    DumpGithubActionsMatrix {
+        /// Flake URL or github URL
+        ///
+        /// A specific nixci configuration can be specified
+        /// using '#': e.g. `nixci .#extra-tests`
+        /// TODO: DRY (see BuildConfig)
+        #[arg(default_value = ".")]
+        flake_ref: FlakeRef,
+    },
+}
+
+#[derive(Parser, Debug)]
+pub struct BuildConfig {
     /// The systems list to build for. If empty, build for current system.
     ///
     /// Must be a flake reference which, when imported, must return a Nix list
@@ -71,19 +84,23 @@ pub struct CliArgs {
     #[arg(long, default_value = "github:nix-systems/empty")]
     pub build_systems: SystemFlakeUrl,
 
-    #[arg(long)]
-    pub dump_github_actions_matrix: bool,
+    /// Flake URL or github URL
+    ///
+    /// A specific nixci` configuration can be specified
+    /// using '#': e.g. `nixci .#extra-tests`
+    #[arg(default_value = ".")]
+    pub flake_ref: FlakeRef,
 
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![
-        "--refresh".to_string(),
-        "-j".to_string(),
-        "auto".to_string(),
+    "--refresh".to_string(),
+    "-j".to_string(),
+    "auto".to_string(),
     ])]
     pub extra_nix_build_args: Vec<String>,
 }
 
-impl CliArgs {
+impl BuildConfig {
     pub async fn get_build_systems(&self) -> Result<Vec<System>> {
         let systems = SystemsList::from_flake(&self.build_systems).await?.0;
         if systems.is_empty() {
