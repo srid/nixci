@@ -1,5 +1,6 @@
 /// Enough types to get branch info from Pull Request URL
 use anyhow::{bail, Context};
+use itertools::iproduct;
 use nix_rs::flake::{system::System, url::FlakeUrl};
 use reqwest::header::USER_AGENT;
 use serde::{Deserialize, Serialize};
@@ -108,7 +109,7 @@ where
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GitHubMatrixRow {
-    pub system: String,
+    pub system: System,
     pub subflake: String,
 }
 
@@ -119,15 +120,9 @@ pub struct GitHubMatrix {
 
 impl GitHubMatrix {
     pub fn new(systems: Vec<System>, subflakes: Vec<String>) -> Self {
-        let mut include = vec![];
-        for system in systems {
-            for subflake in &subflakes {
-                include.push(GitHubMatrixRow {
-                    system: system.to_string(),
-                    subflake: subflake.to_string(),
-                });
-            }
-        }
+        let include = iproduct!(systems, subflakes)
+            .map(|(system, subflake)| GitHubMatrixRow { system, subflake })
+            .collect();
         GitHubMatrix { include }
     }
 }
