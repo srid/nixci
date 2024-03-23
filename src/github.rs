@@ -117,25 +117,28 @@ pub struct GitHubMatrix {
     pub include: Vec<GitHubMatrixRow>,
 }
 
-
+impl GitHubMatrix {
+    pub fn new(systems: Vec<System>, subflakes: Vec<String>) -> Self {
+        let mut include = vec![];
+        for system in systems {
+            for subflake in &subflakes {
+                include.push(GitHubMatrixRow {
+                    system: system.to_string(),
+                    subflake: subflake.to_string(),
+                });
+            }
+        }
+        GitHubMatrix { include }
+    }
+}
 
 pub(crate) async fn dump_github_actions_matrix(
     cfg: &Config,
     systems: Vec<System>,
 ) -> anyhow::Result<()> {
-    let mut rows = vec![];
     // TODO: Should take into account systems whitelist
     // Ref: https://github.com/srid/nixci/blob/efc77c8794e5972617874edd96afa8dd4f1a75b2/src/config.rs#L104-L105
-    for system in systems {
-        for (subflake_name, _subflake) in &cfg.subflakes.0 {
-            let row = GitHubMatrixRow {
-                system: system.to_string(),
-                subflake: subflake_name.to_string(),
-            };
-            rows.push(row);
-        }
-    }
-    let matrix = GitHubMatrix { include: rows };
+    let matrix = GitHubMatrix::new(systems, cfg.subflakes.0.keys().cloned().collect());
     println!("{}", serde_json::to_string(&matrix)?);
     Ok(())
 }
