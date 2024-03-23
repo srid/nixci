@@ -2,9 +2,11 @@
 use anyhow::{bail, Context};
 use nix_rs::flake::url::FlakeUrl;
 use reqwest::header::USER_AGENT;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use try_guard::guard;
 use url::{Host, Url};
+
+use crate::config::Config;
 
 /// A reference to a Github Pull Request
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,4 +104,23 @@ where
     } else {
         bail!("cannot make request: {}", resp.status())
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GitHubMatrixRow {
+    pub build_system: String,
+    pub subflake: String,
+}
+
+pub(crate) async fn dump_github_actions_matrix(cfg: &Config) -> anyhow::Result<()> {
+    let mut matrix = vec![];
+    for (subflake_name, _subflake) in &cfg.subflakes.0 {
+        let row = GitHubMatrixRow {
+            build_system: "nix".to_string(),
+            subflake: subflake_name.to_string(),
+        };
+        matrix.push(row);
+    }
+    println!("{}", serde_json::to_string(&matrix)?);
+    Ok(())
 }

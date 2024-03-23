@@ -10,7 +10,7 @@ use nix_rs::{
 
 use crate::{
     github::{self, PullRequest, PullRequestRef},
-    nix::system_list::SystemsList,
+    nix::system_list::{SystemFlakeUrl, SystemsList},
 };
 
 /// A reference to some flake living somewhere
@@ -69,7 +69,10 @@ pub struct CliArgs {
     /// of systems. You may use one of the lists from
     /// https://github.com/nix-systems.
     #[arg(long, default_value = "github:nix-systems/empty")]
-    pub build_systems: FlakeUrl,
+    pub build_systems: SystemFlakeUrl,
+
+    #[arg(long)]
+    pub dump_github_actions_matrix: bool,
 
     /// Additional arguments to pass through to `nix build`
     #[arg(last = true, default_values_t = vec![

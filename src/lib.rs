@@ -22,6 +22,19 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     let cfg = config::Config::from_flake_url(&url).await?;
     tracing::debug!("Config: {cfg:?}");
 
+    if args.dump_github_actions_matrix {
+        github::dump_github_actions_matrix(&cfg).await?;
+        Ok(vec![])
+    } else {
+        nixci_build(&args, &url, &cfg).await
+    }
+}
+
+async fn nixci_build(
+    args: &CliArgs,
+    url: &FlakeUrl,
+    cfg: &config::Config,
+) -> anyhow::Result<Vec<DrvOut>> {
     let mut all_outs = HashSet::new();
 
     let systems = args.get_build_systems().await?;
@@ -38,7 +51,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
         }
         tracing::info!("🍎 {}", name);
         if subflake.can_build_on(&systems) {
-            let outs = nixci_subflake(&args, &url, &subflake_name, &subflake).await?;
+            let outs = nixci_subflake(args, url, subflake_name, subflake).await?;
             all_outs.extend(outs.0);
         } else {
             tracing::info!(

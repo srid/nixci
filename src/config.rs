@@ -145,7 +145,7 @@ impl SubFlakish {
             .chain([
                 "--override-input".to_string(),
                 "systems".to_string(),
-                cli_args.build_systems.0.clone(),
+                cli_args.build_systems.0 .0.clone(),
             ])
             .chain(cli_args.extra_nix_build_args.iter().cloned())
             .collect()

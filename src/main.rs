@@ -6,6 +6,6 @@ use nixci::cli;
 async fn main() -> Result<()> {
     let args = cli::CliArgs::parse();
     nixci::logging::setup_logging(args.verbose);
-    let _outs = nixci::nixci(args).await?;
+    nixci::nixci(args).await?;
     Ok(())
 }
