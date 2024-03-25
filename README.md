@@ -68,6 +68,7 @@ jobs:
     runs-on: self-hosted
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      fail-fast: false
     steps:
      - uses: actions/checkout@v4
      - id: set-matrix
