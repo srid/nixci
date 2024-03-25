@@ -106,7 +106,7 @@ pub struct BuildConfig {
     /// of systems. You may use one of the lists from
     /// https://github.com/nix-systems.
     #[arg(long, default_value = "github:nix-systems/empty")]
-    pub build_systems: SystemsListFlakeRef,
+    pub systems: SystemsListFlakeRef,
 
     /// Flake URL or github URL
     ///
@@ -125,8 +125,8 @@ pub struct BuildConfig {
 }
 
 impl BuildConfig {
-    pub async fn get_build_systems(&self) -> Result<Vec<System>> {
-        let systems = SystemsList::from_flake(&self.build_systems).await?.0;
+    pub async fn get_systems(&self) -> Result<Vec<System>> {
+        let systems = SystemsList::from_flake(&self.systems).await?.0;
         if systems.is_empty() {
             let current_system = get_current_system().await?;
             Ok(vec![current_system])

@@ -35,7 +35,7 @@ async fn nixci_build(
 ) -> anyhow::Result<Vec<DrvOut>> {
     let mut all_outs = HashSet::new();
 
-    let systems = build_cfg.get_build_systems().await?;
+    let systems = build_cfg.get_systems().await?;
 
     for (subflake_name, subflake) in &cfg.subflakes.0 {
         let name = format!("{}.{}", cfg.name, subflake_name).italic();

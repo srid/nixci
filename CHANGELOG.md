@@ -3,7 +3,7 @@
 
 - New features
     - Add new config `nixci.*.*.systems` acting as a whitelist of systems to build that subflake.
-    - Add `--build-systems` option to build on an arbitrary systems (\#39)
+    - Add `nixci build --systems` option to build on an arbitrary systems (\#39)
     - Allow selecting sub-flake to build, e.g.: `nixci .#default.myflake`  (\#45)
     - Add subcommand to generate Github Actions matrix (\#50)
         - Consequently, you must run `nixci build` instead of `nixci` now.

@@ -83,7 +83,7 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - run: nixci build --build-systems "github:nix-systems/${{ matrix.system }}" .#default.${{ matrix.subflake}}
+      - run: nixci build --systems "github:nix-systems/${{ matrix.system }}" .#default.${{ matrix.subflake}}
 ```
 
 ## Configuring
