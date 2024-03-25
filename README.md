@@ -60,7 +60,7 @@ Add the following to your workflow file,
       - uses: yaxitech/nix-install-pkgs-action@v3
         with:
           packages: "github:srid/nixci"
-      - run: nixci
+      - run: nixci build
 ```
 
 #### Self-hosted Runners with Job Matrix
