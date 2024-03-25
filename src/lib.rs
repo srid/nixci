@@ -22,7 +22,6 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
         cli::Command::DumpGithubActionsMatrix { systems, .. } => {
             let matrix = github::matrix::GitHubMatrix::from(systems, &cfg.subflakes);
             println!("{}", serde_json::to_string(&matrix)?);
-            // TODO: Return something meaningful, or break the function.
             Ok(vec![])
         }
     }

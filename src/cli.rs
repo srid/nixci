@@ -84,7 +84,7 @@ pub enum Command {
 }
 
 impl Command {
-    /// Get the nixci [config::Config] associated with this subcommand
+    /// Get the [FlakeUrl] & nixci [config::Config] associated with this subcommand
     pub async fn get_config(&self) -> anyhow::Result<(FlakeUrl, config::Config)> {
         let flake_ref = match self {
             Command::Build(build_cfg) => &build_cfg.flake_ref,
