@@ -65,6 +65,9 @@ Add the following to your workflow file,
 
 #### Self-hosted Runners with Job Matrix
 
+> [!NOTE] 
+> This currently requires an explicit nixci configuration in your flake, viz.: `nixci.default.dir = ./.;`.
+
 ```yaml
 jobs:
   configure:
