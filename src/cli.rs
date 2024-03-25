@@ -64,7 +64,10 @@ pub struct CliArgs {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Build all outputs of a flake
     Build(BuildConfig),
+
+    /// Display the Github Actions matrix JSON
     DumpGithubActionsMatrix {
         /// Flake URL or github URL
         ///
