@@ -68,7 +68,6 @@ jobs:
     runs-on: self-hosted
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      fail-fast: false
     steps:
      - uses: actions/checkout@v4
      - id: set-matrix
@@ -78,6 +77,7 @@ jobs:
     needs: configure
     strategy:
       matrix: ${{ fromJson(needs.configure.outputs.matrix) }}
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - run: nixci build --build-systems "github:nix-systems/${{ matrix.system }}" .#default.${{ matrix.subflake}}
