@@ -31,7 +31,6 @@ nix_rs = { version = "0.3.1" }
 # nix_rs = { version = "0.3.1", path = "../nix-browser/crates/nix_rs" }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing = "0.1.37"
-itertools = "0.12.1"
 
 [dev-dependencies]
 regex = "1.9"
