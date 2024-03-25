@@ -82,10 +82,10 @@
             # Wrap the "nixci" package so that it passes `build` as default argument, if the user passes none.
             # For backwards compatibility.
             # We must do this here, as clap doesn't support it: https://github.com/clap-rs/clap/issues/975
-            default = pkgs.writeShellScriptBin "nixci" 
+            default = pkgs.writeShellScriptBin "nixci"
               ''
-              # Make 'build' the default subcommand.
-              exec ${lib.getExe nixci} "''${@:-build}"
+                # Make 'build' the default subcommand.
+                exec ${lib.getExe nixci} "''${@:-build}"
               '';
           };
           overlayAttrs.nixci = self'.packages.default;
