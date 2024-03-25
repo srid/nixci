@@ -77,7 +77,7 @@
           };
 
           # Flake outputs
-          packages.nixci = craneLib.buildPackage args;
+          packages.default = craneLib.buildPackage args;
           overlayAttrs.nixci = self'.packages.default;
 
           devShells.default = pkgs.mkShell {
