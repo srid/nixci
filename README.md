@@ -27,21 +27,26 @@ To install, run `nix profile install github:srid/nixci`. You can also use use `n
 `nixci` accepts any valid [flake URL](https://nixos.asia/en/flake-url) or a Github PR URL.
 
 ```sh
+# Run nixci on current directory flake
+$ nixci # Or `nixci build` or `nixci build .`
+
 # Run nixci on a local flake (default is $PWD)
-$ nixci ~/code/myproject
+$ nixci build ~/code/myproject
 
 # Run nixci on a github repo
-$ nixci github:hercules-ci/hercules-ci-agent
+$ nixci build github:hercules-ci/hercules-ci-agent
 
 # Run nixci on a github PR
-$ nixci https://github.com/srid/emanote/pull/451
+$ nixci build https://github.com/srid/emanote/pull/451
 
 # Run only the selected sub-flake
 $ git clone https://github.com/srid/haskell-flake && cd haskell-flake
-$ nixci .#default.dev
+$ nixci build .#default.dev
 ```
 
 ### Using in Github Actions
+
+#### Standard Runners
 
 Add the following to your workflow file,
 
@@ -55,7 +60,30 @@ Add the following to your workflow file,
       - uses: yaxitech/nix-install-pkgs-action@v3
         with:
           packages: "github:srid/nixci"
-      - run: nixci
+      - run: nixci build
+```
+
+#### Self-hosted Runners with Job Matrix
+
+```yaml
+jobs:
+  configure:
+    runs-on: self-hosted
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+     - uses: actions/checkout@v4
+     - id: set-matrix
+       run: echo "matrix=$(nixci dump-github-actions-matrix --systems=aarch64-linux,aarch64-darwin | jq -c .)" >> $GITHUB_OUTPUT
+  nix:
+    runs-on: self-hosted
+    needs: configure
+    strategy:
+      matrix: ${{ fromJson(needs.configure.outputs.matrix) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - run: nixci build --build-systems "github:nix-systems/${{ matrix.system }}" .#default.${{ matrix.subflake}}
 ```
 
 ## Configuring

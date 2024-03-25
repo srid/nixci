@@ -6,7 +6,7 @@ pub mod nix;
 
 use std::collections::HashSet;
 
-use cli::CliArgs;
+use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::devour_flake::{DevourFlakeOutput, DrvOut};
 use nix_rs::flake::url::FlakeUrl;
@@ -16,15 +16,26 @@ use tracing::instrument;
 #[instrument(name = "nixci", skip(args))]
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     tracing::debug!("Args: {args:?}");
-    let url = args.flake_ref.to_flake_url().await?;
-    tracing::info!("{}", format!("🍏 {}", url.0).bold());
+    let (url, cfg) = args.command.get_config().await?;
+    match args.command {
+        cli::Command::Build(build_cfg) => nixci_build(args.verbose, &build_cfg, &url, &cfg).await,
+        cli::Command::DumpGithubActionsMatrix { systems, .. } => {
+            let matrix = github::matrix::GitHubMatrix::from(systems, &cfg.subflakes);
+            println!("{}", serde_json::to_string(&matrix)?);
+            Ok(vec![])
+        }
+    }
+}
 
-    let cfg = config::Config::from_flake_url(&url).await?;
-    tracing::debug!("Config: {cfg:?}");
-
+async fn nixci_build(
+    verbose: bool,
+    build_cfg: &BuildConfig,
+    url: &FlakeUrl,
+    cfg: &config::Config,
+) -> anyhow::Result<Vec<DrvOut>> {
     let mut all_outs = HashSet::new();
 
-    let systems = args.get_build_systems().await?;
+    let systems = build_cfg.get_build_systems().await?;
 
     for (subflake_name, subflake) in &cfg.subflakes.0 {
         let name = format!("{}.{}", cfg.name, subflake_name).italic();
@@ -38,7 +49,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
         }
         tracing::info!("🍎 {}", name);
         if subflake.can_build_on(&systems) {
-            let outs = nixci_subflake(&args, &url, &subflake_name, &subflake).await?;
+            let outs = nixci_subflake(verbose, build_cfg, url, subflake_name, subflake).await?;
             all_outs.extend(outs.0);
         } else {
             tracing::info!(
@@ -51,9 +62,10 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     Ok(all_outs.into_iter().collect())
 }
 
-#[instrument(skip(cli_args, url))]
+#[instrument(skip(build_cfg, url))]
 async fn nixci_subflake(
-    cli_args: &CliArgs,
+    verbose: bool,
+    build_cfg: &BuildConfig,
     url: &FlakeUrl,
     subflake_name: &str,
     subflake: &config::SubFlakish,
@@ -62,8 +74,8 @@ async fn nixci_subflake(
         nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone())).await?;
     }
 
-    let nix_args = subflake.nix_build_args_for_flake(cli_args, url);
-    let outs = nix::devour_flake::devour_flake(cli_args.verbose, nix_args).await?;
+    let nix_args = subflake.nix_build_args_for_flake(build_cfg, url);
+    let outs = nix::devour_flake::devour_flake(verbose, nix_args).await?;
     for out in &outs.0 {
         println!("{}", out.0.bold());
     }

@@ -1,15 +1,40 @@
+use std::str::FromStr;
+
 use anyhow::Result;
 use nix_rs::{
     command::{NixCmd, NixCmdError},
     flake::{system::System, url::FlakeUrl},
 };
 
+/// A flake URL that references a list of systems ([SystemsList])
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SystemsListFlakeRef(pub FlakeUrl);
+
+impl FromStr for SystemsListFlakeRef {
+    type Err = String;
+    fn from_str(s: &str) -> std::result::Result<SystemsListFlakeRef, String> {
+        // Systems lists recognized by `github:nix-system/*`
+        let known_nix_systems = [
+            "aarch64-darwin",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "x86_64-linux",
+        ];
+        let url = if known_nix_systems.contains(&s) {
+            format!("github:nix-systems/{}", s)
+        } else {
+            s.to_string()
+        };
+        Ok(SystemsListFlakeRef(FlakeUrl(url)))
+    }
+}
+
 pub struct SystemsList(pub Vec<System>);
 
 impl SystemsList {
-    pub async fn from_flake(url: &FlakeUrl) -> Result<Self> {
+    pub async fn from_flake(url: &SystemsListFlakeRef) -> Result<Self> {
         // Nix eval, and then return the systems
-        let systems = nix_import_flake::<Vec<System>>(url).await?;
+        let systems = nix_import_flake::<Vec<System>>(&url.0).await?;
         Ok(SystemsList(systems))
     }
 }
@@ -42,18 +67,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_empty_systems_list() {
-        let systems = SystemsList::from_flake(&FlakeUrl("github:nix-systems/empty".to_string()))
-            .await
-            .unwrap();
+        let systems = SystemsList::from_flake(&SystemsListFlakeRef(FlakeUrl(
+            "github:nix-systems/empty".to_string(),
+        )))
+        .await
+        .unwrap();
         assert_eq!(systems.0, vec![]);
     }
 
     #[tokio::test]
     async fn test_systems_list() {
-        let systems =
-            SystemsList::from_flake(&FlakeUrl("github:nix-systems/default-darwin".to_string()))
-                .await
-                .unwrap();
+        let systems = SystemsList::from_flake(&SystemsListFlakeRef(FlakeUrl(
+            "github:nix-systems/default-darwin".to_string(),
+        )))
+        .await
+        .unwrap();
         assert_eq!(
             systems.0,
             vec![

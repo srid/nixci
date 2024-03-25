@@ -4,7 +4,7 @@ use anyhow::Result;
 use nix_rs::flake::{eval::nix_eval_attr_json, system::System, url::FlakeUrl};
 use serde::Deserialize;
 
-use crate::cli::CliArgs;
+use crate::cli::BuildConfig;
 
 /// The `nixci` configuration encoded in flake.nix
 ///
@@ -117,7 +117,7 @@ impl Default for SubFlakish {
 }
 
 impl SubFlakish {
-    pub fn can_build_on(&self, systems: &Vec<System>) -> bool {
+    pub fn can_build_on(&self, systems: &[System]) -> bool {
         match self.systems.as_ref() {
             Some(systems_whitelist) => systems_whitelist.iter().any(|s| systems.contains(s)),
             None => true,
@@ -128,7 +128,7 @@ impl SubFlakish {
     /// subflake configuration.
     pub fn nix_build_args_for_flake(
         &self,
-        cli_args: &CliArgs,
+        build_cfg: &BuildConfig,
         flake_url: &FlakeUrl,
     ) -> Vec<String> {
         std::iter::once(flake_url.sub_flake_url(self.dir.clone()).0)
@@ -145,9 +145,9 @@ impl SubFlakish {
             .chain([
                 "--override-input".to_string(),
                 "systems".to_string(),
-                cli_args.build_systems.0.clone(),
+                build_cfg.build_systems.0 .0.clone(),
             ])
-            .chain(cli_args.extra_nix_build_args.iter().cloned())
+            .chain(build_cfg.extra_nix_build_args.iter().cloned())
             .collect()
     }
 }
