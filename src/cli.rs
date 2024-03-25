@@ -11,7 +11,7 @@ use nix_rs::{
 
 use crate::{
     config,
-    github::{self, PullRequest, PullRequestRef},
+    github::pull_request::{PullRequest, PullRequestRef},
     nix::system_list::{SystemFlakeUrl, SystemsList},
 };
 
@@ -27,7 +27,7 @@ pub enum FlakeRef {
 impl FromStr for FlakeRef {
     type Err = String;
     fn from_str(s: &str) -> std::result::Result<FlakeRef, String> {
-        let flake_ref = match github::PullRequestRef::from_web_url(s) {
+        let flake_ref = match PullRequestRef::from_web_url(s) {
             Some(pr) => FlakeRef::GithubPR(pr),
             None => FlakeRef::Flake(FlakeUrl(s.to_string())),
         };

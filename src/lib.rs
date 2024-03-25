@@ -20,7 +20,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     match args.command {
         cli::Command::Build(build_cfg) => nixci_build(args.verbose, &build_cfg, &url, &cfg).await,
         cli::Command::DumpGithubActionsMatrix { systems, .. } => {
-            github::dump_github_actions_matrix(&cfg, systems).await?;
+            github::matrix::dump_github_actions_matrix(&cfg, systems).await?;
             // TODO: Return something meaningful, or break the function.
             Ok(vec![])
         }
