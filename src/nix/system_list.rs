@@ -6,14 +6,14 @@ use nix_rs::{
     flake::{system::System, url::FlakeUrl},
 };
 
-/// A flake URL that references a list of systems
+/// A flake URL that references a list of systems ([SystemsList])
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SystemFlakeUrl(pub FlakeUrl);
+pub struct SystemsListFlakeRef(pub FlakeUrl);
 
-impl FromStr for SystemFlakeUrl {
+impl FromStr for SystemsListFlakeRef {
     type Err = String;
-    fn from_str(s: &str) -> std::result::Result<SystemFlakeUrl, String> {
-        // Systems recognized by `github:nix-system/*`
+    fn from_str(s: &str) -> std::result::Result<SystemsListFlakeRef, String> {
+        // Systems lists recognized by `github:nix-system/*`
         let known_nix_systems = [
             "aarch64-darwin",
             "aarch64-linux",
@@ -25,14 +25,14 @@ impl FromStr for SystemFlakeUrl {
         } else {
             s.to_string()
         };
-        Ok(SystemFlakeUrl(FlakeUrl(url)))
+        Ok(SystemsListFlakeRef(FlakeUrl(url)))
     }
 }
 
 pub struct SystemsList(pub Vec<System>);
 
 impl SystemsList {
-    pub async fn from_flake(url: &SystemFlakeUrl) -> Result<Self> {
+    pub async fn from_flake(url: &SystemsListFlakeRef) -> Result<Self> {
         // Nix eval, and then return the systems
         let systems = nix_import_flake::<Vec<System>>(&url.0).await?;
         Ok(SystemsList(systems))
@@ -67,7 +67,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_empty_systems_list() {
-        let systems = SystemsList::from_flake(&SystemFlakeUrl(FlakeUrl(
+        let systems = SystemsList::from_flake(&SystemsListFlakeRef(FlakeUrl(
             "github:nix-systems/empty".to_string(),
         )))
         .await
@@ -77,7 +77,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_systems_list() {
-        let systems = SystemsList::from_flake(&SystemFlakeUrl(FlakeUrl(
+        let systems = SystemsList::from_flake(&SystemsListFlakeRef(FlakeUrl(
             "github:nix-systems/default-darwin".to_string(),
         )))
         .await

@@ -12,7 +12,7 @@ use nix_rs::{
 use crate::{
     config,
     github::pull_request::{PullRequest, PullRequestRef},
-    nix::system_list::{SystemFlakeUrl, SystemsList},
+    nix::system_list::{SystemsList, SystemsListFlakeRef},
 };
 
 /// A reference to some flake living somewhere
@@ -106,7 +106,7 @@ pub struct BuildConfig {
     /// of systems. You may use one of the lists from
     /// https://github.com/nix-systems.
     #[arg(long, default_value = "github:nix-systems/empty")]
-    pub build_systems: SystemFlakeUrl,
+    pub build_systems: SystemsListFlakeRef,
 
     /// Flake URL or github URL
     ///

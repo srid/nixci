@@ -6,6 +6,7 @@
     - Add `--build-systems` option to build on an arbitrary systems (\#39)
     - Allow selecting sub-flake to build, e.g.: `nixci .#default.myflake`  (\#45)
     - Add subcommand to generate Github Actions matrix (\#50)
+        - Consequently, you must run `nixci build` instead of `nixci` now.
 - Fixes
     - Fix regression in Nix 2.19+ (`devour-flake produced an outpath with no outputs`) (\#35)
     - Evaluate OS configurations for current system only (\#38)
