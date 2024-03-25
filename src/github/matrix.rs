@@ -20,18 +20,13 @@ pub(crate) async fn dump_github_actions_matrix(
     systems: Vec<System>,
 ) -> anyhow::Result<()> {
     let include: Vec<GitHubMatrixRow> = systems
-        .iter() // Assuming systems can be iterated over by reference.
+        .iter()
         .flat_map(|system| {
             cfg.subflakes.0.iter().filter_map(|(k, v)| {
-                if v.can_build_on(&[system.clone()]) {
-                    // Assuming this doesn't need to be a Vec anymore.
-                    Some(GitHubMatrixRow {
-                        system: system.clone(), // Only clone system here if necessary.
-                        subflake: k.clone(),    // Assuming k needs to be owned here.
-                    })
-                } else {
-                    None
-                }
+                v.can_build_on(&[system.clone()]).then(|| GitHubMatrixRow {
+                    system: system.clone(), // Only clone system here if necessary.
+                    subflake: k.clone(),    // Assuming k needs to be owned here.
+                })
             })
         })
         .collect();
