@@ -27,18 +27,21 @@ To install, run `nix profile install github:srid/nixci`. You can also use use `n
 `nixci` accepts any valid [flake URL](https://nixos.asia/en/flake-url) or a Github PR URL.
 
 ```sh
+# Run nixci on current directory flake
+$ nixci # Or `nixci build` or `nixci build .`
+
 # Run nixci on a local flake (default is $PWD)
-$ nixci ~/code/myproject
+$ nixci build ~/code/myproject
 
 # Run nixci on a github repo
-$ nixci github:hercules-ci/hercules-ci-agent
+$ nixci build github:hercules-ci/hercules-ci-agent
 
 # Run nixci on a github PR
-$ nixci https://github.com/srid/emanote/pull/451
+$ nixci build https://github.com/srid/emanote/pull/451
 
 # Run only the selected sub-flake
 $ git clone https://github.com/srid/haskell-flake && cd haskell-flake
-$ nixci .#default.dev
+$ nixci build .#default.dev
 ```
 
 ### Using in Github Actions
