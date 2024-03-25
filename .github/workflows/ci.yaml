@@ -10,6 +10,7 @@ jobs:
     strategy:
       matrix:
         system: [aarch64-darwin, aarch64-linux]
+        fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: nixci
