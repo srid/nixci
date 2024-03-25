@@ -74,7 +74,6 @@ pub enum Command {
         ///
         /// A specific nixci configuration can be specified
         /// using '#': e.g. `nixci .#extra-tests`
-        /// TODO: DRY (see BuildConfig)
         #[arg(default_value = ".")]
         flake_ref: FlakeRef,
 
