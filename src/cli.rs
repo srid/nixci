@@ -67,7 +67,8 @@ pub enum Command {
     /// Build all outputs of a flake
     Build(BuildConfig),
 
-    /// Display the Github Actions matrix JSON
+    /// Print the Github Actions matrix configuration as JSON
+    #[clap(name = "gh-matrix")]
     DumpGithubActionsMatrix {
         /// Flake URL or github URL
         ///
