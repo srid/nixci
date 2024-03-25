@@ -84,8 +84,8 @@ pub enum Command {
 }
 
 impl Command {
-    /// Get the [FlakeUrl] & nixci [config::Config] associated with this subcommand
-    pub async fn get_config(&self) -> anyhow::Result<(FlakeUrl, config::Config)> {
+    /// Get the nixci [config::Config] associated with this subcommand
+    pub async fn get_config(&self) -> anyhow::Result<config::Config> {
         let flake_ref = match self {
             Command::Build(build_cfg) => &build_cfg.flake_ref,
             Command::DumpGithubActionsMatrix { flake_ref, .. } => flake_ref,
@@ -94,7 +94,7 @@ impl Command {
         tracing::info!("{}", format!("🍏 {}", url.0).bold());
         let cfg = config::Config::from_flake_url(&url).await?;
         tracing::debug!("Config: {cfg:?}");
-        Ok((url, cfg))
+        Ok(cfg)
     }
 }
 
