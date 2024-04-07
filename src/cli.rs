@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use nix_rs::{
-    command::{NixCmd, NixCmdError},
+    command::NixCmdError,
     config::NixConfig,
     flake::{system::System, url::FlakeUrl},
 };
@@ -137,7 +137,8 @@ impl BuildConfig {
 }
 
 async fn get_current_system() -> Result<System, NixCmdError> {
-    let config = NixConfig::from_nix(&NixCmd::default()).await?;
+    let cmd = crate::NIXCMD.get().unwrap();
+    let config = NixConfig::from_nix(cmd).await?;
     Ok(config.system.value)
 }
 
