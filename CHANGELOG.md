@@ -7,6 +7,7 @@
     - Allow selecting sub-flake to build, e.g.: `nixci .#default.myflake`  (\#45)
     - Add subcommand to generate Github Actions matrix (\#50)
         - Consequently, you must run `nixci build` instead of `nixci` now.
+    - Pass `--extra-experimental-features` only when necessary. Simplifies logging. (#46)
 - Fixes
     - Fix regression in Nix 2.19+ (`devour-flake produced an outpath with no outputs`) (\#35)
     - Evaluate OS configurations for current system only (\#38)

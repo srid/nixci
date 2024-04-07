@@ -1,5 +1,5 @@
 default:
-    @just --list 
+    @just --list
 
 # Auto-format the source tree
 fmt:
@@ -7,11 +7,9 @@ fmt:
 
 alias f := fmt
 
-# Run the project locally (eg: `j watch ~/code/yourproject`)
-watch *ARGS:
+# Run the project locally (eg: `j w build ~/code/yourproject`)
+w *ARGS:
     cargo watch -s "cargo run -- {{ARGS}}"
-
-alias w := watch
 
 # Run tests
 test:

@@ -27,8 +27,8 @@ reqwest = { version = "0.11", features = ["blocking", "json"] }
 try-guard = "0.2.0"
 clap = { version = "4.4", features = ["derive"] }
 urlencoding = "2.1.3"
-nix_rs = { version = "0.3.1" }
-# nix_rs = { version = "0.3.1", path = "../nix-browser/crates/nix_rs" }
+nix_rs = { version = "0.3.3" }
+# nix_rs = { version = "0.3.2", path = "../nix-rs" }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing = "0.1.37"
 

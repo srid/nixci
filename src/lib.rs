@@ -5,17 +5,21 @@ pub mod logging;
 pub mod nix;
 
 use std::collections::HashSet;
+use tokio::sync::OnceCell;
 
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::devour_flake::{DevourFlakeOutput, DrvOut};
-use nix_rs::flake::url::FlakeUrl;
+use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
+
+static NIXCMD: OnceCell<NixCmd> = OnceCell::const_new();
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 #[instrument(name = "nixci", skip(args))]
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     tracing::debug!("Args: {args:?}");
+    NIXCMD.set(NixCmd::with_flakes().await?)?;
     let cfg = args.command.get_config().await?;
     match args.command {
         cli::Command::Build(build_cfg) => nixci_build(args.verbose, &build_cfg, &cfg).await,

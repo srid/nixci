@@ -1,11 +1,11 @@
 use std::process::Stdio;
 
 use anyhow::{bail, Result};
-use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
+use nix_rs::flake::url::FlakeUrl;
 
 /// Make sure that the `flake.lock` file is in sync.
 pub async fn nix_flake_lock_check(url: &FlakeUrl) -> Result<()> {
-    let nix = NixCmd::default();
+    let nix = crate::NIXCMD.get().unwrap();
     let mut cmd = nix.command();
     cmd.args(&["flake", "lock", "--no-update-lock-file", &url.0]);
     nix_rs::command::trace_cmd(&cmd);

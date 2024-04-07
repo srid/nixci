@@ -45,6 +45,7 @@ impl Config {
     /// ```
     /// along with the config.
     pub async fn from_flake_url(url: &FlakeUrl) -> Result<Config> {
+        let cmd = crate::NIXCMD.get().unwrap();
         let (flake_url, attr) = url.split_attr();
         let nested_attr = attr.as_list();
         let (name, selected_subflake) = match nested_attr.as_slice() {
@@ -54,7 +55,7 @@ impl Config {
             _ => anyhow::bail!("Invalid flake URL (too many nested attr): {}", flake_url.0),
         };
         let nixci_url = FlakeUrl(format!("{}#nixci.{}", flake_url.0, name));
-        let subflakes = nix_eval_attr_json::<Subflakes>(&nixci_url, attr.is_none()).await?;
+        let subflakes = nix_eval_attr_json::<Subflakes>(cmd, &nixci_url, attr.is_none()).await?;
         if let Some(sub_flake_name) = selected_subflake.clone() {
             if !subflakes.0.contains_key(&sub_flake_name) {
                 anyhow::bail!(
