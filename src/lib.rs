@@ -15,11 +15,16 @@ use tracing::instrument;
 
 static NIXCMD: OnceCell<NixCmd> = OnceCell::const_new();
 
+pub async fn nixcmd() -> &'static NixCmd {
+    NIXCMD
+        .get_or_init(|| async { NixCmd::with_flakes().await.unwrap() })
+        .await
+}
+
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 #[instrument(name = "nixci", skip(args))]
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
     tracing::debug!("Args: {args:?}");
-    NIXCMD.set(NixCmd::with_flakes().await?)?;
     let cfg = args.command.get_config().await?;
     match args.command {
         cli::Command::Build(build_cfg) => nixci_build(args.verbose, &build_cfg, &cfg).await,
