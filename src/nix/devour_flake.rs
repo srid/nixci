@@ -40,7 +40,7 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<DevourFlak
     let nix = crate::nixcmd().await;
     let mut cmd = nix.command();
     let devour_flake_url = format!("{}#default", env!("DEVOUR_FLAKE"));
-    cmd.args(&[
+    cmd.args([
         "build",
         &devour_flake_url,
         "-L",
@@ -74,7 +74,7 @@ pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<DevourFlak
         .context("Unable to spawn devour-flake process")?;
     if output.status.success() {
         let stdout = String::from_utf8(output.stdout)?;
-        let v = DevourFlakeOutput::from_str(&stdout.trim())?;
+        let v = DevourFlakeOutput::from_str(stdout.trim())?;
         Ok(v)
     } else {
         let exit_code = output.status.code().unwrap_or(1);
