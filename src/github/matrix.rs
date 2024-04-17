@@ -20,12 +20,14 @@ impl GitHubMatrix {
         let include: Vec<GitHubMatrixRow> = systems
             .iter()
             .flat_map(|system| {
-                subflakes.0.iter().filter_map(|(k, v)| {
-                    v.can_build_on(&[system.clone()]).then(|| GitHubMatrixRow {
+                subflakes
+                    .0
+                    .iter()
+                    .filter(|&(_k, v)| v.can_build_on(&[system.clone()]))
+                    .map(|(k, _v)| GitHubMatrixRow {
                         system: system.clone(),
                         subflake: k.clone(),
                     })
-                })
             })
             .collect();
         GitHubMatrix { include }

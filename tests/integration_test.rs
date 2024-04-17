@@ -16,7 +16,7 @@ mod integration_test {
     #[tokio::test]
     /// A simple test, without config
     async fn test_haskell_multi_nix() -> anyhow::Result<()> {
-        let args = cli::CliArgs::parse_from(&[
+        let args = cli::CliArgs::parse_from([
             "nixci",
             "-v",
             "build",
@@ -39,7 +39,7 @@ mod integration_test {
     #[tokio::test]
     /// A test, with config
     async fn test_services_flake() -> anyhow::Result<()> {
-        let args = cli::CliArgs::parse_from(&[
+        let args = cli::CliArgs::parse_from([
             "nixci",
             "-v",
             "build",
