@@ -137,7 +137,7 @@ impl BuildConfig {
 }
 
 async fn get_current_system() -> Result<System, NixCmdError> {
-    let cmd = crate::NIXCMD.get().unwrap();
+    let cmd = crate::nixcmd().await;
     let config = NixConfig::from_nix(cmd).await?;
     Ok(config.system.value)
 }

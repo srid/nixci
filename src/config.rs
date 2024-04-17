@@ -45,7 +45,7 @@ impl Config {
     /// ```
     /// along with the config.
     pub async fn from_flake_url(url: &FlakeUrl) -> Result<Config> {
-        let cmd = crate::NIXCMD.get().unwrap();
+        let cmd = crate::nixcmd().await;
         let (flake_url, attr) = url.split_attr();
         let nested_attr = attr.as_list();
         let (name, selected_subflake) = match nested_attr.as_slice() {

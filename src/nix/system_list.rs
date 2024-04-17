@@ -53,7 +53,7 @@ async fn nix_eval_impure_expr<T>(expr: String) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
-    let nix = crate::NIXCMD.get().unwrap();
+    let nix = crate::nixcmd().await;
     let v = nix
         .run_with_args_expecting_json::<T>(&["eval", "--impure", "--json", "--expr", &expr])
         .await?;
