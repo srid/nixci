@@ -1,5 +1,5 @@
 
-# Unreleased
+# 0.4.0 (Apr 19, 2024)
 
 - New features
     - Add new config `nixci.*.*.systems` acting as a whitelist of systems to build that subflake.
@@ -13,7 +13,7 @@
     - Evaluate OS configurations for current system only (\#38)
     - Fail correctly if nixci is passed a missing flake attribute (\#44)
 
-# 0.2.0
+# 0.2.0 (Sep 14, 2023)
 
 - Breaking changes
     - Change flake schema: evaluates `nixci.default` instead of `nixci`; this allows more than one configuration (#20)
