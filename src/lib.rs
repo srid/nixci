@@ -11,7 +11,7 @@ use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::{
     devour_flake::DevourFlakeOutput,
-    nix_store::{NixStoreCmd, StorePath},
+    nix_store::{fetch_all_deps, NixStoreCmd, StorePath},
 };
 use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
@@ -53,6 +53,8 @@ async fn nixci_build(
 ) -> anyhow::Result<Vec<StorePath>> {
     let mut all_outs = HashSet::new();
 
+    let mut all_devour_flake_outs = HashSet::new();
+
     let systems = build_cfg.get_systems().await?;
 
     for (subflake_name, subflake) in &cfg.subflakes.0 {
@@ -69,11 +71,7 @@ async fn nixci_build(
         if subflake.can_build_on(&systems) {
             let outs =
                 nixci_subflake(verbose, build_cfg, &cfg.flake_url, subflake_name, subflake).await?;
-            all_outs.extend(
-                outs.0
-                    .into_iter()
-                    .map(|devour_flake::BuildOutput(path)| StorePath::BuildOutput(path)),
-            );
+            all_devour_flake_outs.extend(outs.0);
         } else {
             tracing::info!(
                 "🍊 {} {}",
@@ -84,17 +82,14 @@ async fn nixci_build(
     }
 
     if build_cfg.print_all_dependencies {
-        let mut all_drvs = Vec::new();
-        for out in all_outs.iter() {
-            if let StorePath::BuildOutput(drv_out) = out {
-                let drv = nix::nix_store::nix_store_query_deriver(drv_out.clone()).await?;
-                all_drvs.push(drv);
-            }
-        }
-        for drv in all_drvs {
-            let deps = nix::nix_store::nix_store_query_requisites_with_outputs(drv.clone()).await?;
-            all_outs.extend(deps.into_iter());
-        }
+        let all_deps = fetch_all_deps(all_devour_flake_outs.into_iter().collect()).await?;
+        all_outs.extend(all_deps.into_iter());
+    } else {
+        let store_paths: HashSet<StorePath> = all_devour_flake_outs
+            .into_iter()
+            .map(|devour_flake::BuildOutput(out_path)| StorePath::BuildOutput(out_path))
+            .collect();
+        all_outs.extend(store_paths);
     }
 
     for out in &all_outs {

@@ -4,6 +4,8 @@ use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
+use super::devour_flake;
+
 /// The `nix-store` command
 /// See documentation for [nix-store](https://nixos.org/manual/nix/stable/command-ref/nix-store.html)
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -90,4 +92,20 @@ pub async fn nix_store_query_requisites_with_outputs(drv_path: PathBuf) -> Resul
             exit_code
         );
     }
+}
+
+/// Fetch all build and runtime dependencies of given [devour_flake::BuildOutput]s
+pub async fn fetch_all_deps(out_paths: Vec<devour_flake::BuildOutput>) -> Result<Vec<StorePath>> {
+    let mut all_drvs = Vec::new();
+    for out in out_paths.iter() {
+        let devour_flake::BuildOutput(out_path) = out;
+        let drv = nix_store_query_deriver(out_path.clone()).await?;
+        all_drvs.push(drv);
+    }
+    let mut all_outs = Vec::new();
+    for drv in all_drvs {
+        let deps = nix_store_query_requisites_with_outputs(drv.clone()).await?;
+        all_outs.extend(deps.into_iter());
+    }
+    Ok(all_outs)
 }
