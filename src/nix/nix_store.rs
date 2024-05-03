@@ -1,6 +1,21 @@
 use std::{fmt, path::PathBuf};
 
 use anyhow::{bail, Result};
+use serde::{Deserialize, Serialize};
+use tokio::process::Command;
+
+/// The `nix-store` command
+/// See documentation for [nix-store](https://nixos.org/manual/nix/stable/command-ref/nix-store.html)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
+pub struct NixStoreCmd;
+
+impl NixStoreCmd {
+    pub fn command(&self) -> Command {
+        let mut cmd = Command::new("nix-store");
+        cmd.kill_on_drop(true);
+        cmd
+    }
+}
 
 /// Encompasses both derivation and derivation output paths
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]

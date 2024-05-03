@@ -9,11 +9,11 @@ use tokio::sync::OnceCell;
 
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
-use nix::{devour_flake::DevourFlakeOutput, nix_store::StorePath};
-use nix_rs::{
-    command::{NixCmd, NixStoreCmd},
-    flake::url::FlakeUrl,
+use nix::{
+    devour_flake::DevourFlakeOutput,
+    nix_store::{NixStoreCmd, StorePath},
 };
+use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
 
 use crate::nix::devour_flake;
