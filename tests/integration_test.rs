@@ -5,7 +5,10 @@
 #[cfg(feature = "integration_test")]
 mod integration_test {
     use clap::Parser;
-    use nixci::{self, cli, nix::devour_flake::DrvOut};
+    use nixci::{
+        self, cli,
+        nix::{all_deps::DrvPaths, devour_flake::DrvOut},
+    };
     use regex::Regex;
 
     #[ctor::ctor]
@@ -23,6 +26,16 @@ mod integration_test {
             "github:srid/haskell-multi-nix/c85563721c388629fa9e538a1d97274861bc8321",
         ]);
         let outs = nixci::nixci(args).await?;
+        let drv_outs: Vec<DrvOut> = outs
+            .into_iter()
+            .filter_map(|drv_result| {
+                if let DrvPaths::DrvOut(drv_out) = drv_result {
+                    Some(drv_out)
+                } else {
+                    None
+                }
+            })
+            .collect();
         let expected = vec![
             "/nix/store/3x2kpymc1qmd05da20wnmdyam38jkl7s-ghc-shell-for-packages-0",
             "/nix/store/dzhf0i3wi69568m5nvyckck8bbs9yrfd-foo-0.1.0.0",
@@ -32,7 +45,7 @@ mod integration_test {
         .into_iter()
         .map(|s| DrvOut(s.to_string()))
         .collect::<Vec<_>>();
-        assert_same_drvs(outs, expected);
+        assert_same_drvs(drv_outs, expected);
         Ok(())
     }
 
@@ -47,6 +60,16 @@ mod integration_test {
             "github:juspay/services-flake/3d764f19d0a121915447641fe49a9b8d02777ff8",
         ]);
         let outs = nixci::nixci(args).await?;
+        let drv_outs: Vec<DrvOut> = outs
+            .into_iter()
+            .filter_map(|drv_result| {
+                if let DrvPaths::DrvOut(drv_out) = drv_result {
+                    Some(drv_out)
+                } else {
+                    None
+                }
+            })
+            .collect();
         let expected = vec![
             "/nix/store/1vlflyqyjnpa9089dgryrhpkypj9zg76-elasticsearch",
             "/nix/store/20dz7z6pbzpx6sg61lf2sihj286zs3i2-postgres-test",
@@ -69,7 +92,7 @@ mod integration_test {
         .into_iter()
         .map(|s| DrvOut(s.to_string()))
         .collect::<Vec<_>>();
-        assert_same_drvs(outs, expected);
+        assert_same_drvs(drv_outs, expected);
         Ok(())
     }
 
