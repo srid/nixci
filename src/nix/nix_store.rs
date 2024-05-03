@@ -1,41 +1,39 @@
-use std::fmt;
+use std::{fmt, path::PathBuf};
 
 use anyhow::{bail, Result};
 
-use super::devour_flake::DrvOut;
-
-/// Nix derivation path
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
-pub struct Drv(pub String);
-
 /// Encompasses both derivation and derivation output paths
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
-pub enum DrvPaths {
-    DrvOut(DrvOut),
-    Drv(Drv),
+pub enum StorePath {
+    BuildOutput(PathBuf),
+    Drv(PathBuf),
 }
 
-impl fmt::Display for DrvPaths {
+impl fmt::Display for StorePath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DrvPaths::DrvOut(drv_out) => write!(f, "{}", drv_out.0),
-            DrvPaths::Drv(drv) => write!(f, "{}", drv.0),
+            StorePath::BuildOutput(out_path) => write!(f, "{}", out_path.display()),
+            StorePath::Drv(drv_path) => write!(f, "{}", drv_path.display()),
         }
     }
 }
 
 /// Query the deriver of an output path
-pub async fn nix_store_query_deriver(out_path: DrvOut) -> Result<Drv> {
+pub async fn nix_store_query_deriver(out_path: PathBuf) -> Result<PathBuf> {
     let nix_store = crate::nix_store_cmd().await;
     let mut cmd = nix_store.command();
-    cmd.args(["--query", "--deriver", &out_path.0]);
+    cmd.args([
+        "--query",
+        "--deriver",
+        &out_path.to_string_lossy().to_string(),
+    ]);
     nix_rs::command::trace_cmd(&cmd);
-    let drv_out = cmd.output().await?;
-    if drv_out.status.success() {
-        let drv = String::from_utf8(drv_out.stdout)?.trim().to_string();
-        Ok(Drv(drv))
+    let out = cmd.output().await?;
+    if out.status.success() {
+        let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
+        Ok(PathBuf::from(drv_path))
     } else {
-        let exit_code = drv_out.status.code().unwrap_or(1);
+        let exit_code = out.status.code().unwrap_or(1);
         bail!(
             "nix-store --query --deriver failed to run (exited: {})",
             exit_code
@@ -44,10 +42,15 @@ pub async fn nix_store_query_deriver(out_path: DrvOut) -> Result<Drv> {
 }
 
 /// Query the requisites of a derivation path, including outputs
-pub async fn nix_store_query_requisites_with_outputs(drv: Drv) -> Result<Vec<DrvPaths>> {
+pub async fn nix_store_query_requisites_with_outputs(drv_path: PathBuf) -> Result<Vec<StorePath>> {
     let nix_store = crate::nix_store_cmd().await;
     let mut cmd = nix_store.command();
-    cmd.args(["--query", "--requisites", "--include-outputs", &drv.0]);
+    cmd.args([
+        "--query",
+        "--requisites",
+        "--include-outputs",
+        &drv_path.to_string_lossy().to_string(),
+    ]);
     nix_rs::command::trace_cmd(&cmd);
     let out = cmd.output().await?;
     if out.status.success() {
@@ -58,9 +61,9 @@ pub async fn nix_store_query_requisites_with_outputs(drv: Drv) -> Result<Vec<Drv
             .filter(|l| !l.is_empty())
             .map(|l| {
                 if l.ends_with(".drv") {
-                    DrvPaths::Drv(Drv(l))
+                    StorePath::Drv(PathBuf::from(l))
                 } else {
-                    DrvPaths::DrvOut(DrvOut(l))
+                    StorePath::BuildOutput(PathBuf::from(l))
                 }
             })
             .collect();

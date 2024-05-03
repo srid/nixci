@@ -9,12 +9,14 @@ use tokio::sync::OnceCell;
 
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
-use nix::{all_deps::DrvPaths, devour_flake::DevourFlakeOutput};
+use nix::{devour_flake::DevourFlakeOutput, nix_store::StorePath};
 use nix_rs::{
     command::{NixCmd, NixStoreCmd},
     flake::url::FlakeUrl,
 };
 use tracing::instrument;
+
+use crate::nix::devour_flake;
 
 static NIXCMD: OnceCell<NixCmd> = OnceCell::const_new();
 static NIX_STORE_CMD: OnceCell<NixStoreCmd> = OnceCell::const_new();
@@ -31,7 +33,7 @@ pub async fn nix_store_cmd() -> &'static NixStoreCmd {
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 #[instrument(name = "nixci", skip(args))]
-pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvPaths>> {
+pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
     tracing::debug!("Args: {args:?}");
     let cfg = args.command.get_config().await?;
     match args.command {
@@ -48,7 +50,7 @@ async fn nixci_build(
     verbose: bool,
     build_cfg: &BuildConfig,
     cfg: &config::Config,
-) -> anyhow::Result<Vec<DrvPaths>> {
+) -> anyhow::Result<Vec<StorePath>> {
     let mut all_outs = HashSet::new();
 
     let systems = build_cfg.get_systems().await?;
@@ -67,7 +69,11 @@ async fn nixci_build(
         if subflake.can_build_on(&systems) {
             let outs =
                 nixci_subflake(verbose, build_cfg, &cfg.flake_url, subflake_name, subflake).await?;
-            all_outs.extend(outs.0.into_iter().map(DrvPaths::DrvOut));
+            all_outs.extend(
+                outs.0
+                    .into_iter()
+                    .map(|devour_flake::BuildOutput(path)| StorePath::BuildOutput(path)),
+            );
         } else {
             tracing::info!(
                 "🍊 {} {}",
@@ -80,13 +86,13 @@ async fn nixci_build(
     if build_cfg.print_all_dependencies {
         let mut all_drvs = Vec::new();
         for out in all_outs.iter() {
-            if let DrvPaths::DrvOut(drv_out) = out {
-                let drv = nix::all_deps::nix_store_query_deriver(drv_out.clone()).await?;
+            if let StorePath::BuildOutput(drv_out) = out {
+                let drv = nix::nix_store::nix_store_query_deriver(drv_out.clone()).await?;
                 all_drvs.push(drv);
             }
         }
         for drv in all_drvs {
-            let deps = nix::all_deps::nix_store_query_requisites_with_outputs(drv.clone()).await?;
+            let deps = nix::nix_store::nix_store_query_requisites_with_outputs(drv.clone()).await?;
             all_outs.extend(deps.into_iter());
         }
     }

@@ -4,11 +4,10 @@
 //! sandbox), and must be manually enabled using the feature flag.
 #[cfg(feature = "integration_test")]
 mod integration_test {
+    use std::path::PathBuf;
+
     use clap::Parser;
-    use nixci::{
-        self, cli,
-        nix::{all_deps::DrvPaths, devour_flake::DrvOut},
-    };
+    use nixci::{self, cli, nix::nix_store::StorePath};
     use regex::Regex;
 
     #[ctor::ctor]
@@ -26,10 +25,10 @@ mod integration_test {
             "github:srid/haskell-multi-nix/c85563721c388629fa9e538a1d97274861bc8321",
         ]);
         let outs = nixci::nixci(args).await?;
-        let drv_outs: Vec<DrvOut> = outs
+        let drv_outs: Vec<PathBuf> = outs
             .into_iter()
             .filter_map(|drv_result| {
-                if let DrvPaths::DrvOut(drv_out) = drv_result {
+                if let StorePath::BuildOutput(drv_out) = drv_result {
                     Some(drv_out)
                 } else {
                     None
@@ -43,7 +42,7 @@ mod integration_test {
             "/nix/store/hsj8mwn9vzlyaxzmwyf111scisnjhlkb-bar-0.1.0.0/bin/bar",
         ]
         .into_iter()
-        .map(|s| DrvOut(s.to_string()))
+        .map(|s| PathBuf::from(s.to_string()))
         .collect::<Vec<_>>();
         assert_same_drvs(drv_outs, expected);
         Ok(())
@@ -60,10 +59,10 @@ mod integration_test {
             "github:juspay/services-flake/3d764f19d0a121915447641fe49a9b8d02777ff8",
         ]);
         let outs = nixci::nixci(args).await?;
-        let drv_outs: Vec<DrvOut> = outs
+        let drv_outs: Vec<PathBuf> = outs
             .into_iter()
             .filter_map(|drv_result| {
-                if let DrvPaths::DrvOut(drv_out) = drv_result {
+                if let StorePath::BuildOutput(drv_out) = drv_result {
                     Some(drv_out)
                 } else {
                     None
@@ -90,13 +89,13 @@ mod integration_test {
             "/nix/store/y3xlr9fnsq43j175b3f69k5s7qw0gh8p-default",
         ]
         .into_iter()
-        .map(|s| DrvOut(s.to_string()))
+        .map(|s| PathBuf::from(s.to_string()))
         .collect::<Vec<_>>();
         assert_same_drvs(drv_outs, expected);
         Ok(())
     }
 
-    pub fn assert_same_drvs(drvs1: Vec<DrvOut>, drvs2: Vec<DrvOut>) {
+    pub fn assert_same_drvs(drvs1: Vec<PathBuf>, drvs2: Vec<PathBuf>) {
         assert_eq!(drvs1.len(), drvs2.len());
         let mut drv1 = drvs1
             .into_iter()
@@ -111,9 +110,9 @@ mod integration_test {
         assert_eq!(drv1, drv2);
     }
 
-    pub fn without_hash(out: &DrvOut) -> String {
+    pub fn without_hash(out_path: &PathBuf) -> String {
         let re = Regex::new(r".+\-(.+)").unwrap();
-        let captures = re.captures(out.0.as_str()).unwrap();
+        let captures = re.captures(out_path.to_str().unwrap()).unwrap();
         captures.get(1).unwrap().as_str().to_string()
     }
 }
