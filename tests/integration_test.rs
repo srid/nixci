@@ -49,6 +49,26 @@ mod integration_test {
     }
 
     #[tokio::test]
+    async fn test_haskell_multi_nix_all_dependencies() -> anyhow::Result<()> {
+        let args = cli::CliArgs::parse_from([
+            "nixci",
+            "-v",
+            "build",
+            "--print-all-dependencies",
+            "github:srid/haskell-multi-nix/c85563721c388629fa9e538a1d97274861bc8321",
+        ]);
+        let outs = nixci::nixci(args).await?;
+        // Since the number of dependencies is huge, we just check for the presence of system-independent
+        // source of the `foo` sub-package in `haskell-multi-nix`.
+        // TODO: `source` store paths are not [StorePath::BuildOutput]
+        let expected = StorePath::BuildOutput(PathBuf::from(
+            "/nix/store/bpybsny4gd5jnw0lvk5khpq7md6nwg5f-source-foo",
+        ));
+        assert!(outs.contains(&expected));
+        Ok(())
+    }
+
+    #[tokio::test]
     /// A test, with config
     async fn test_services_flake() -> anyhow::Result<()> {
         let args = cli::CliArgs::parse_from([
