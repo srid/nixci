@@ -19,10 +19,13 @@ impl NixStoreCmd {
     }
 }
 
-/// Encompasses both derivation and derivation output paths
+/// Represents a path in the Nix store, see: <https://zero-to-nix.com/concepts/nix-store#store-paths>
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
 pub enum StorePath {
+    /// Output path, which is the result of building a [StorePath::Drv]
     BuildOutput(PathBuf),
+    /// Derivation path, which is a recipe for producing reproducible [StorePath::BuildOutput].
+    /// Usually, a derivation path ends with `.drv`.
     Drv(PathBuf),
 }
 
@@ -35,7 +38,7 @@ impl fmt::Display for StorePath {
     }
 }
 
-/// Query the deriver of an output path
+/// Given a [StorePath::BuildOutput], this function queries and returns its [StorePath::Drv].
 pub async fn nix_store_query_deriver(out_path: PathBuf) -> Result<PathBuf> {
     let nix_store = crate::nix_store_cmd().await;
     let mut cmd = nix_store.command();
@@ -58,7 +61,8 @@ pub async fn nix_store_query_deriver(out_path: PathBuf) -> Result<PathBuf> {
     }
 }
 
-/// Query the requisites of a derivation path, including outputs
+/// Given a [StorePath::Drv], this function recursively queries all its [StorePath::Drv]
+/// and [StorePath::BuildOutput] dependencies.
 pub async fn nix_store_query_requisites_with_outputs(drv_path: PathBuf) -> Result<Vec<StorePath>> {
     let nix_store = crate::nix_store_cmd().await;
     let mut cmd = nix_store.command();
@@ -95,6 +99,10 @@ pub async fn nix_store_query_requisites_with_outputs(drv_path: PathBuf) -> Resul
 }
 
 /// Fetch all build and runtime dependencies of given [devour_flake::BuildOutput]s
+///
+/// This is done by querying the deriver of each output path from [devour_flake::BuildOutput] using [nix_store_query_deriver] and
+/// then querying all dependencies of each deriver using [nix_store_query_requisites_with_outputs].
+/// Finally, all dependencies of each deriver are collected and returned as [Vec<StorePath>].
 pub async fn fetch_all_deps(out_paths: Vec<devour_flake::BuildOutput>) -> Result<Vec<StorePath>> {
     let mut all_drvs = Vec::new();
     for out in out_paths.iter() {
