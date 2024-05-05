@@ -28,7 +28,7 @@ mod integration_test {
         let drv_outs: Vec<PathBuf> = outs
             .into_iter()
             .filter_map(|drv_result| {
-                if let StorePath::BuildOutput(drv_out) = drv_result {
+                if let StorePath::Other(drv_out) = drv_result {
                     Some(drv_out)
                 } else {
                     None
@@ -60,8 +60,7 @@ mod integration_test {
         let outs = nixci::nixci(args).await?;
         // Since the number of dependencies is huge, we just check for the presence of system-independent
         // source of the `foo` sub-package in `haskell-multi-nix`.
-        // TODO: `source` store paths are not [StorePath::BuildOutput]
-        let expected = StorePath::BuildOutput(PathBuf::from(
+        let expected = StorePath::Other(PathBuf::from(
             "/nix/store/bpybsny4gd5jnw0lvk5khpq7md6nwg5f-source-foo",
         ));
         assert!(outs.contains(&expected));
@@ -82,7 +81,7 @@ mod integration_test {
         let drv_outs: Vec<PathBuf> = outs
             .into_iter()
             .filter_map(|drv_result| {
-                if let StorePath::BuildOutput(drv_out) = drv_result {
+                if let StorePath::Other(drv_out) = drv_result {
                     Some(drv_out)
                 } else {
                     None

@@ -9,7 +9,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 /// We expect this environment to be set in Nix build and shell.
 pub const DEVOUR_FLAKE: &str = env!("DEVOUR_FLAKE");
 
-pub struct DevourFlakeOutput(pub HashSet<BuildOutput>);
+pub struct DevourFlakeOutput(pub HashSet<DrvOut>);
 
 impl FromStr for DevourFlakeOutput {
     type Err = anyhow::Error;
@@ -18,7 +18,7 @@ impl FromStr for DevourFlakeOutput {
         // Read output_filename, as newline separated strings
         let raw_output = std::fs::read_to_string(output_filename)?;
         let outs = raw_output.split_ascii_whitespace();
-        let outs: HashSet<BuildOutput> = outs.map(|s| BuildOutput(PathBuf::from(s))).collect();
+        let outs: HashSet<DrvOut> = outs.map(|s| DrvOut(PathBuf::from(s))).collect();
         if outs.is_empty() {
             bail!(
                 "devour-flake produced an outpath ({}) with no outputs",
@@ -32,7 +32,7 @@ impl FromStr for DevourFlakeOutput {
 
 /// Nix derivation output path
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
-pub struct BuildOutput(pub PathBuf);
+pub struct DrvOut(pub PathBuf);
 
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<DevourFlakeOutput> {
     // TODO: Use nix_rs here as well
