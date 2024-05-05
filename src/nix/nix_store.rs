@@ -42,11 +42,7 @@ impl fmt::Display for StorePath {
 pub async fn nix_store_query_deriver(out_path: PathBuf) -> Result<PathBuf> {
     let nix_store = crate::nix_store_cmd().await;
     let mut cmd = nix_store.command();
-    cmd.args([
-        "--query",
-        "--deriver",
-        &out_path.to_string_lossy().to_string(),
-    ]);
+    cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
     nix_rs::command::trace_cmd(&cmd);
     let out = cmd.output().await?;
     if out.status.success() {
@@ -70,7 +66,7 @@ pub async fn nix_store_query_requisites_with_outputs(drv_path: PathBuf) -> Resul
         "--query",
         "--requisites",
         "--include-outputs",
-        &drv_path.to_string_lossy().to_string(),
+        &drv_path.to_string_lossy().as_ref(),
     ]);
     nix_rs::command::trace_cmd(&cmd);
     let out = cmd.output().await?;
