@@ -9,6 +9,12 @@
     rust-flake.inputs.nixpkgs.follows = "nixpkgs";
     cargo-doc-live.url = "github:srid/cargo-doc-live";
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
+    just-flake.url = "github:juspay/just-flake";
+    pre-commit-hooks-nix = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-stable.follows = "nixpkgs";
+    };
 
     # Dev tools
     treefmt-nix.url = "github:numtide/treefmt-nix";
@@ -27,7 +33,9 @@
         inputs.rust-flake.flakeModules.nixpkgs
         inputs.cargo-doc-live.flakeModule
         inputs.process-compose-flake.flakeModule
+        inputs.pre-commit-hooks-nix.flakeModule
         inputs.treefmt-nix.flakeModule
+        inputs.just-flake.flakeModule
       ];
 
       perSystem = { config, self', pkgs, lib, system, ... }: {
@@ -37,12 +45,27 @@
             SystemConfiguration
           ] ++ [
             libiconv
-            pkgconfig
+            pkg-config
           ];
           buildInputs = lib.optionals pkgs.stdenv.isLinux [
             pkgs.openssl
           ];
           DEVOUR_FLAKE = inputs.devour-flake;
+        };
+
+        pre-commit = {
+          check.enable = true;
+          settings = {
+            hooks = {
+              treefmt.enable = true;
+              convco.enable = true;
+            };
+          };
+        };
+
+        just-flake.features = {
+          treefmt.enable = true;
+          convco.enable = true;
         };
 
         # Flake outputs
@@ -54,14 +77,15 @@
           inputsFrom = [
             self'.devShells.nixci
             config.treefmt.build.devShell
+            config.just-flake.outputs.devShell
           ];
           shellHook = ''
             export DEVOUR_FLAKE=${inputs.devour-flake}
           '';
           packages = [
-            pkgs.just
             pkgs.cargo-watch
             config.process-compose.cargo-doc-live.outputs.package
+            config.pre-commit.settings.tools.convco
           ];
         };
 
