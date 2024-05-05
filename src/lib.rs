@@ -10,13 +10,11 @@ use tokio::sync::OnceCell;
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::{
-    devour_flake::{DevourFlakeOutput, DrvOut},
-    nix_store::{NixStoreCmd, StorePath},
+    devour_flake::DevourFlakeOutput,
+    nix_store::{DrvOut, NixStoreCmd, StorePath},
 };
 use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
-
-use crate::nix::devour_flake;
 
 static NIXCMD: OnceCell<NixCmd> = OnceCell::const_new();
 
@@ -58,7 +56,7 @@ async fn nixci_build(
     } else {
         let store_paths: HashSet<StorePath> = all_devour_flake_outs
             .into_iter()
-            .map(devour_flake::DrvOut::as_store_path)
+            .map(DrvOut::as_store_path)
             .collect();
         all_outs.extend(store_paths);
     }

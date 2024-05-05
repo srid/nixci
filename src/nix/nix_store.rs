@@ -4,7 +4,15 @@ use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
-use super::devour_flake::{self, DrvOut};
+/// Nix derivation output path
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
+pub struct DrvOut(pub PathBuf);
+
+impl DrvOut {
+    pub fn as_store_path(self) -> StorePath {
+        StorePath::Other(self.0)
+    }
+}
 
 /// Represents a path in the Nix store, see: <https://zero-to-nix.com/concepts/nix-store#store-paths>
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
@@ -58,13 +66,10 @@ impl NixStoreCmd {
     /// This is done by querying the deriver of each output path from [devour_flake::DrvOut] using [nix_store_query_deriver] and
     /// then querying all dependencies of each deriver using [nix_store_query_requisites_with_outputs].
     /// Finally, all dependencies of each deriver are collected and returned as [Vec<StorePath>].
-    pub async fn fetch_all_deps(
-        &self,
-        out_paths: Vec<devour_flake::DrvOut>,
-    ) -> Result<Vec<StorePath>> {
+    pub async fn fetch_all_deps(&self, out_paths: Vec<DrvOut>) -> Result<Vec<StorePath>> {
         let mut all_drvs = Vec::new();
         for out in out_paths.iter() {
-            let devour_flake::DrvOut(out_path) = out;
+            let DrvOut(out_path) = out;
             let drv = self.nix_store_query_deriver(out_path.clone()).await?;
             all_drvs.push(drv);
         }
