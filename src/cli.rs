@@ -122,6 +122,13 @@ pub struct BuildConfig {
     "auto".to_string(),
     ])]
     pub extra_nix_build_args: Vec<String>,
+
+    /// Print build and runtime dependencies along with out paths
+    ///
+    /// By default, `nixci build` prints only the out paths. This option is
+    /// useful to explicitly push all dependencies to a cache.
+    #[clap(long, short = 'd')]
+    pub print_all_dependencies: bool,
 }
 
 impl BuildConfig {

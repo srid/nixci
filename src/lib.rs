@@ -9,7 +9,10 @@ use tokio::sync::OnceCell;
 
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
-use nix::devour_flake::{DevourFlakeOutput, DrvOut};
+use nix::{
+    devour_flake::DevourFlakeOutput,
+    nix_store::{DrvOut, NixStoreCmd, StorePath},
+};
 use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
 
@@ -23,7 +26,7 @@ pub async fn nixcmd() -> &'static NixCmd {
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 #[instrument(name = "nixci", skip(args))]
-pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<DrvOut>> {
+pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
     tracing::debug!("Args: {args:?}");
     let cfg = args.command.get_config().await?;
     match args.command {
@@ -40,8 +43,37 @@ async fn nixci_build(
     verbose: bool,
     build_cfg: &BuildConfig,
     cfg: &config::Config,
-) -> anyhow::Result<Vec<DrvOut>> {
+) -> anyhow::Result<Vec<StorePath>> {
     let mut all_outs = HashSet::new();
+
+    let all_devour_flake_outs = nixci_subflakes(verbose, build_cfg, cfg).await?;
+
+    if build_cfg.print_all_dependencies {
+        let all_deps = NixStoreCmd
+            .fetch_all_deps(all_devour_flake_outs.into_iter().collect())
+            .await?;
+        all_outs.extend(all_deps.into_iter());
+    } else {
+        let store_paths: HashSet<StorePath> = all_devour_flake_outs
+            .into_iter()
+            .map(DrvOut::as_store_path)
+            .collect();
+        all_outs.extend(store_paths);
+    }
+
+    for out in &all_outs {
+        println!("{}", out);
+    }
+
+    Ok(all_outs.into_iter().collect())
+}
+
+async fn nixci_subflakes(
+    verbose: bool,
+    build_cfg: &BuildConfig,
+    cfg: &config::Config,
+) -> anyhow::Result<HashSet<DrvOut>> {
+    let mut result = HashSet::new();
 
     let systems = build_cfg.get_systems().await?;
 
@@ -59,7 +91,7 @@ async fn nixci_build(
         if subflake.can_build_on(&systems) {
             let outs =
                 nixci_subflake(verbose, build_cfg, &cfg.flake_url, subflake_name, subflake).await?;
-            all_outs.extend(outs.0);
+            result.extend(outs.0);
         } else {
             tracing::info!(
                 "🍊 {} {}",
@@ -68,7 +100,8 @@ async fn nixci_build(
             );
         }
     }
-    Ok(all_outs.into_iter().collect())
+
+    Ok(result)
 }
 
 #[instrument(skip(build_cfg, url))]
@@ -85,8 +118,5 @@ async fn nixci_subflake(
 
     let nix_args = subflake.nix_build_args_for_flake(build_cfg, url);
     let outs = nix::devour_flake::devour_flake(verbose, nix_args).await?;
-    for out in &outs.0 {
-        println!("{}", out.0.bold());
-    }
     Ok(outs)
 }
