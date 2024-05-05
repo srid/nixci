@@ -11,7 +11,7 @@ use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::{
     devour_flake::DevourFlakeOutput,
-    nix_store::{fetch_all_deps, NixStoreCmd, StorePath},
+    nix_store::{fetch_all_deps, StorePath},
 };
 use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
@@ -19,16 +19,11 @@ use tracing::instrument;
 use crate::nix::devour_flake;
 
 static NIXCMD: OnceCell<NixCmd> = OnceCell::const_new();
-static NIX_STORE_CMD: OnceCell<NixStoreCmd> = OnceCell::const_new();
 
 pub async fn nixcmd() -> &'static NixCmd {
     NIXCMD
         .get_or_init(|| async { NixCmd::with_flakes().await.unwrap() })
         .await
-}
-
-pub async fn nix_store_cmd() -> &'static NixStoreCmd {
-    NIX_STORE_CMD.get_or_init(|| async { NixStoreCmd }).await
 }
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.

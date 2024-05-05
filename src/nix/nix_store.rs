@@ -40,8 +40,7 @@ impl fmt::Display for StorePath {
 
 /// Given a [StorePath::BuildOutput], this function queries and returns its [StorePath::Drv].
 pub async fn nix_store_query_deriver(out_path: PathBuf) -> Result<PathBuf> {
-    let nix_store = crate::nix_store_cmd().await;
-    let mut cmd = nix_store.command();
+    let mut cmd = NixStoreCmd.command();
     cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
     nix_rs::command::trace_cmd(&cmd);
     let out = cmd.output().await?;
@@ -60,8 +59,7 @@ pub async fn nix_store_query_deriver(out_path: PathBuf) -> Result<PathBuf> {
 /// Given a [StorePath::Drv], this function recursively queries all its [StorePath::Drv]
 /// and [StorePath::BuildOutput] dependencies.
 pub async fn nix_store_query_requisites_with_outputs(drv_path: PathBuf) -> Result<Vec<StorePath>> {
-    let nix_store = crate::nix_store_cmd().await;
-    let mut cmd = nix_store.command();
+    let mut cmd = NixStoreCmd.command();
     cmd.args([
         "--query",
         "--requisites",
