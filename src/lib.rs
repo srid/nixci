@@ -10,7 +10,7 @@ use tokio::sync::OnceCell;
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::{
-    devour_flake::DevourFlakeOutput,
+    devour_flake::{DevourFlakeOutput, DrvOut},
     nix_store::{NixStoreCmd, StorePath},
 };
 use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
@@ -48,33 +48,7 @@ async fn nixci_build(
 ) -> anyhow::Result<Vec<StorePath>> {
     let mut all_outs = HashSet::new();
 
-    let mut all_devour_flake_outs = HashSet::new();
-
-    let systems = build_cfg.get_systems().await?;
-
-    for (subflake_name, subflake) in &cfg.subflakes.0 {
-        let name = format!("{}.{}", cfg.name, subflake_name).italic();
-        if cfg
-            .selected_subflake
-            .as_ref()
-            .is_some_and(|s| s != subflake_name)
-        {
-            tracing::info!("🍊 {} {}", name, "skipped (deselected out)".dimmed());
-            continue;
-        }
-        tracing::info!("🍎 {}", name);
-        if subflake.can_build_on(&systems) {
-            let outs =
-                nixci_subflake(verbose, build_cfg, &cfg.flake_url, subflake_name, subflake).await?;
-            all_devour_flake_outs.extend(outs.0);
-        } else {
-            tracing::info!(
-                "🍊 {} {}",
-                name,
-                "skipped (cannot build on this system)".dimmed()
-            );
-        }
-    }
+    let all_devour_flake_outs = nixci_subflakes(verbose, build_cfg, cfg).await?;
 
     if build_cfg.print_all_dependencies {
         let all_deps = NixStoreCmd
@@ -94,6 +68,42 @@ async fn nixci_build(
     }
 
     Ok(all_outs.into_iter().collect())
+}
+
+async fn nixci_subflakes(
+    verbose: bool,
+    build_cfg: &BuildConfig,
+    cfg: &config::Config,
+) -> anyhow::Result<HashSet<DrvOut>> {
+    let mut result = HashSet::new();
+
+    let systems = build_cfg.get_systems().await?;
+
+    for (subflake_name, subflake) in &cfg.subflakes.0 {
+        let name = format!("{}.{}", cfg.name, subflake_name).italic();
+        if cfg
+            .selected_subflake
+            .as_ref()
+            .is_some_and(|s| s != subflake_name)
+        {
+            tracing::info!("🍊 {} {}", name, "skipped (deselected out)".dimmed());
+            continue;
+        }
+        tracing::info!("🍎 {}", name);
+        if subflake.can_build_on(&systems) {
+            let outs =
+                nixci_subflake(verbose, build_cfg, &cfg.flake_url, subflake_name, subflake).await?;
+            result.extend(outs.0);
+        } else {
+            tracing::info!(
+                "🍊 {} {}",
+                name,
+                "skipped (cannot build on this system)".dimmed()
+            );
+        }
+    }
+
+    Ok(result)
 }
 
 #[instrument(skip(build_cfg, url))]
