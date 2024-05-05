@@ -4,7 +4,7 @@
 //! sandbox), and must be manually enabled using the feature flag.
 #[cfg(feature = "integration_test")]
 mod integration_test {
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     use clap::Parser;
     use nixci::{self, cli, nix::nix_store::StorePath};
@@ -130,7 +130,7 @@ mod integration_test {
         assert_eq!(drv1, drv2);
     }
 
-    pub fn without_hash(out_path: &PathBuf) -> String {
+    pub fn without_hash(out_path: &Path) -> String {
         let re = Regex::new(r".+\-(.+)").unwrap();
         let captures = re.captures(out_path.to_str().unwrap()).unwrap();
         captures.get(1).unwrap().as_str().to_string()
