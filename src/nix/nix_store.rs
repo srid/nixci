@@ -6,19 +6,6 @@ use tokio::process::Command;
 
 use super::devour_flake;
 
-/// The `nix-store` command
-/// See documentation for [nix-store](https://nixos.org/manual/nix/stable/command-ref/nix-store.html)
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
-pub struct NixStoreCmd;
-
-impl NixStoreCmd {
-    pub fn command(&self) -> Command {
-        let mut cmd = Command::new("nix-store");
-        cmd.kill_on_drop(true);
-        cmd
-    }
-}
-
 /// Represents a path in the Nix store, see: <https://zero-to-nix.com/concepts/nix-store#store-paths>
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
 pub enum StorePath {
@@ -38,76 +25,99 @@ impl fmt::Display for StorePath {
     }
 }
 
-/// Return the derivation used to build the given build output.
-pub async fn nix_store_query_deriver(out_path: PathBuf) -> Result<PathBuf> {
-    let mut cmd = NixStoreCmd.command();
-    cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
-    nix_rs::command::trace_cmd(&cmd);
-    let out = cmd.output().await?;
-    if out.status.success() {
-        let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
-        Ok(PathBuf::from(drv_path))
-    } else {
-        let exit_code = out.status.code().unwrap_or(1);
-        bail!(
-            "nix-store --query --deriver failed to run (exited: {})",
-            exit_code
-        );
+/// The `nix-store` command
+/// See documentation for [nix-store](https://nixos.org/manual/nix/stable/command-ref/nix-store.html)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
+pub struct NixStoreCmd;
+
+impl NixStoreCmd {
+    pub fn command(&self) -> Command {
+        let mut cmd = Command::new("nix-store");
+        cmd.kill_on_drop(true);
+        cmd
     }
 }
 
-/// Given a [StorePath::Drv], this function recursively queries and return all
-/// of its dependencies in the Nix store.
-pub async fn nix_store_query_requisites_with_outputs(drv_path: PathBuf) -> Result<Vec<StorePath>> {
-    let mut cmd = NixStoreCmd.command();
-    cmd.args([
-        "--query",
-        "--requisites",
-        "--include-outputs",
-        &drv_path.to_string_lossy().as_ref(),
-    ]);
-    nix_rs::command::trace_cmd(&cmd);
-    let out = cmd.output().await?;
-    if out.status.success() {
-        let out = String::from_utf8(out.stdout)?;
-        let out = out
-            .lines()
-            .map(|l| l.trim().to_string())
-            .filter(|l| !l.is_empty())
-            .map(|l| {
-                if l.ends_with(".drv") {
-                    StorePath::Drv(PathBuf::from(l))
-                } else {
-                    StorePath::Other(PathBuf::from(l))
-                }
-            })
-            .collect();
-        Ok(out)
-    } else {
-        let exit_code = out.status.code().unwrap_or(1);
-        bail!(
-            "nix-store --query --requisites --include-outputs failed to run (exited: {})",
-            exit_code
-        );
+impl NixStoreCmd {
+    /// Fetch all build and runtime dependencies of given [devour_flake::DrvOut]s
+    ///
+    /// This is done by querying the deriver of each output path from [devour_flake::DrvOut] using [nix_store_query_deriver] and
+    /// then querying all dependencies of each deriver using [nix_store_query_requisites_with_outputs].
+    /// Finally, all dependencies of each deriver are collected and returned as [Vec<StorePath>].
+    pub async fn fetch_all_deps(
+        &self,
+        out_paths: Vec<devour_flake::DrvOut>,
+    ) -> Result<Vec<StorePath>> {
+        let mut all_drvs = Vec::new();
+        for out in out_paths.iter() {
+            let devour_flake::DrvOut(out_path) = out;
+            let drv = self.nix_store_query_deriver(out_path.clone()).await?;
+            all_drvs.push(drv);
+        }
+        let mut all_outs = Vec::new();
+        for drv in all_drvs {
+            let deps = self
+                .nix_store_query_requisites_with_outputs(drv.clone())
+                .await?;
+            all_outs.extend(deps.into_iter());
+        }
+        Ok(all_outs)
     }
-}
 
-/// Fetch all build and runtime dependencies of given [devour_flake::DrvOut]s
-///
-/// This is done by querying the deriver of each output path from [devour_flake::DrvOut] using [nix_store_query_deriver] and
-/// then querying all dependencies of each deriver using [nix_store_query_requisites_with_outputs].
-/// Finally, all dependencies of each deriver are collected and returned as [Vec<StorePath>].
-pub async fn fetch_all_deps(out_paths: Vec<devour_flake::DrvOut>) -> Result<Vec<StorePath>> {
-    let mut all_drvs = Vec::new();
-    for out in out_paths.iter() {
-        let devour_flake::DrvOut(out_path) = out;
-        let drv = nix_store_query_deriver(out_path.clone()).await?;
-        all_drvs.push(drv);
+    /// Return the derivation used to build the given build output.
+    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<PathBuf> {
+        let mut cmd = self.command();
+        cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
+        nix_rs::command::trace_cmd(&cmd);
+        let out = cmd.output().await?;
+        if out.status.success() {
+            let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
+            Ok(PathBuf::from(drv_path))
+        } else {
+            let exit_code = out.status.code().unwrap_or(1);
+            bail!(
+                "nix-store --query --deriver failed to run (exited: {})",
+                exit_code
+            );
+        }
     }
-    let mut all_outs = Vec::new();
-    for drv in all_drvs {
-        let deps = nix_store_query_requisites_with_outputs(drv.clone()).await?;
-        all_outs.extend(deps.into_iter());
+
+    /// Given a [StorePath::Drv], this function recursively queries and return all
+    /// of its dependencies in the Nix store.
+    async fn nix_store_query_requisites_with_outputs(
+        &self,
+        drv_path: PathBuf,
+    ) -> Result<Vec<StorePath>> {
+        let mut cmd = self.command();
+        cmd.args([
+            "--query",
+            "--requisites",
+            "--include-outputs",
+            &drv_path.to_string_lossy().as_ref(),
+        ]);
+        nix_rs::command::trace_cmd(&cmd);
+        let out = cmd.output().await?;
+        if out.status.success() {
+            let out = String::from_utf8(out.stdout)?;
+            let out = out
+                .lines()
+                .map(|l| l.trim().to_string())
+                .filter(|l| !l.is_empty())
+                .map(|l| {
+                    if l.ends_with(".drv") {
+                        StorePath::Drv(PathBuf::from(l))
+                    } else {
+                        StorePath::Other(PathBuf::from(l))
+                    }
+                })
+                .collect();
+            Ok(out)
+        } else {
+            let exit_code = out.status.code().unwrap_or(1);
+            bail!(
+                "nix-store --query --requisites --include-outputs failed to run (exited: {})",
+                exit_code
+            );
+        }
     }
-    Ok(all_outs)
 }

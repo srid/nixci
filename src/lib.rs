@@ -11,7 +11,7 @@ use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::{
     devour_flake::DevourFlakeOutput,
-    nix_store::{fetch_all_deps, StorePath},
+    nix_store::{NixStoreCmd, StorePath},
 };
 use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
@@ -77,7 +77,9 @@ async fn nixci_build(
     }
 
     if build_cfg.print_all_dependencies {
-        let all_deps = fetch_all_deps(all_devour_flake_outs.into_iter().collect()).await?;
+        let all_deps = NixStoreCmd
+            .fetch_all_deps(all_devour_flake_outs.into_iter().collect())
+            .await?;
         all_outs.extend(all_deps.into_iter());
     } else {
         let store_paths: HashSet<StorePath> = all_devour_flake_outs
