@@ -1,5 +1,9 @@
 {
-    "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
+    "files.watcherExclude": {
+        "**/.direnv/**": true,
+        "**/result/**": true,
+        "**/result-*/**": true
+    },
     "editor.formatOnSave": true,
     // https://twitter.com/sridca/status/1674947342607216641
     "editor.inlayHints.enabled": "offUnlessPressed",

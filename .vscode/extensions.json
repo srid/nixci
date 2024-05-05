@@ -2,6 +2,7 @@
     "recommendations": [
         "rust-lang.rust-analyzer",
         "jnoortheen.nix-ide",
-        "statiolake.vscode-rustfmt"
+        "statiolake.vscode-rustfmt",
+        "mkhl.direnv"
     ]
 }
