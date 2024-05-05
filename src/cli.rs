@@ -127,7 +127,7 @@ pub struct BuildConfig {
     ///
     /// By default, `nixci build` prints only the out paths. This option is
     /// useful to explicitly push all dependencies to a cache.
-    #[clap(long, short)]
+    #[clap(long, short = 'd')]
     pub print_all_dependencies: bool,
 }
 
