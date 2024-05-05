@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
-use super::devour_flake;
+use super::devour_flake::{self, DrvOut};
 
 /// Represents a path in the Nix store, see: <https://zero-to-nix.com/concepts/nix-store#store-paths>
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
@@ -79,14 +79,14 @@ impl NixStoreCmd {
     }
 
     /// Return the derivation used to build the given build output.
-    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<PathBuf> {
+    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<DrvOut> {
         let mut cmd = self.command();
         cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
         nix_rs::command::trace_cmd(&cmd);
         let out = cmd.output().await?;
         if out.status.success() {
             let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
-            Ok(PathBuf::from(drv_path))
+            Ok(DrvOut(PathBuf::from(drv_path)))
         } else {
             let exit_code = out.status.code().unwrap_or(1);
             bail!(
@@ -100,14 +100,14 @@ impl NixStoreCmd {
     /// of its dependencies in the Nix store.
     async fn nix_store_query_requisites_with_outputs(
         &self,
-        drv_path: PathBuf,
+        drv_path: DrvOut,
     ) -> Result<Vec<StorePath>> {
         let mut cmd = self.command();
         cmd.args([
             "--query",
             "--requisites",
             "--include-outputs",
-            &drv_path.to_string_lossy().as_ref(),
+            &drv_path.0.to_string_lossy().as_ref(),
         ]);
         nix_rs::command::trace_cmd(&cmd);
         let out = cmd.output().await?;

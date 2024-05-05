@@ -4,6 +4,8 @@ use anyhow::{bail, Context, Result};
 use std::{collections::HashSet, path::PathBuf, process::Stdio, str::FromStr};
 use tokio::io::{AsyncBufReadExt, BufReader};
 
+use super::nix_store::StorePath;
+
 /// Absolute path to the devour-flake executable
 ///
 /// We expect this environment to be set in Nix build and shell.
@@ -33,6 +35,12 @@ impl FromStr for DevourFlakeOutput {
 /// Nix derivation output path
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
 pub struct DrvOut(pub PathBuf);
+
+impl DrvOut {
+    pub fn as_store_path(self) -> StorePath {
+        StorePath::Other(self.0)
+    }
+}
 
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<DevourFlakeOutput> {
     // TODO: Use nix_rs here as well

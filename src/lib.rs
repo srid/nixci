@@ -84,7 +84,7 @@ async fn nixci_build(
     } else {
         let store_paths: HashSet<StorePath> = all_devour_flake_outs
             .into_iter()
-            .map(|devour_flake::DrvOut(out_path)| StorePath::Other(out_path))
+            .map(devour_flake::DrvOut::as_store_path)
             .collect();
         all_outs.extend(store_paths);
     }
