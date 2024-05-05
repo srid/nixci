@@ -27,9 +27,9 @@ pub enum StorePath {
 impl StorePath {
     pub fn new(path: PathBuf) -> Self {
         if path.ends_with(".drv") {
-            StorePath::Drv(PathBuf::from(path))
+            StorePath::Drv(path)
         } else {
-            StorePath::Other(PathBuf::from(path))
+            StorePath::Other(path)
         }
     }
 
