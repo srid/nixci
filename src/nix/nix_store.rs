@@ -16,12 +16,26 @@ pub enum StorePath {
     Other(PathBuf),
 }
 
+impl StorePath {
+    pub fn new(path: PathBuf) -> Self {
+        if path.ends_with(".drv") {
+            StorePath::Drv(PathBuf::from(path))
+        } else {
+            StorePath::Other(PathBuf::from(path))
+        }
+    }
+
+    pub fn as_path(&self) -> &PathBuf {
+        match self {
+            StorePath::Drv(p) => p,
+            StorePath::Other(p) => p,
+        }
+    }
+}
+
 impl fmt::Display for StorePath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            StorePath::Other(out_path) => write!(f, "{}", out_path.display()),
-            StorePath::Drv(drv_path) => write!(f, "{}", drv_path.display()),
-        }
+        write!(f, "{}", self.as_path().display())
     }
 }
 
@@ -103,13 +117,8 @@ impl NixStoreCmd {
                 .lines()
                 .map(|l| l.trim().to_string())
                 .filter(|l| !l.is_empty())
-                .map(|l| {
-                    if l.ends_with(".drv") {
-                        StorePath::Drv(PathBuf::from(l))
-                    } else {
-                        StorePath::Other(PathBuf::from(l))
-                    }
-                })
+                .map(PathBuf::from)
+                .map(StorePath::new)
                 .collect();
             Ok(out)
         } else {
