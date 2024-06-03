@@ -151,6 +151,34 @@ impl SubFlakish {
             .chain(build_cfg.extra_nix_build_args.iter().cloned())
             .collect()
     }
+
+        /// Return the devour-flake `nix build` arguments for building all the outputs in this
+    /// subflake configuration.
+    pub fn nix_global_args_for_flake(
+        &self,
+        build_cfg: &BuildConfig,
+        flake_url: &FlakeUrl,
+    ) -> Vec<String> {
+        std::iter::once(flake_url.sub_flake_url(self.dir.clone()).0)
+            .chain(self.override_inputs.iter().flat_map(|(k, v)| {
+                [
+                    "--override-input".to_string(),
+                    // We must prefix the input with "flake" because
+                    // devour-flake uses that input name to refer to the user's
+                    // flake.
+                    format!("flake/{}", k),
+                    v.0.to_string(),
+                ]
+            }))
+            .chain([
+                "--override-input".to_string(),
+                "systems".to_string(),
+                build_cfg.systems.0 .0.clone(),
+            ])
+            .chain(build_cfg.extra_nix_global_args.iter().cloned())
+            .collect()
+    }
+
 }
 
 #[cfg(test)]

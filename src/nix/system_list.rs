@@ -5,6 +5,7 @@ use nix_rs::{
     command::NixCmdError,
     flake::{system::System, url::FlakeUrl},
 };
+use crate::cli::BuildConfig;
 
 /// A flake URL that references a list of systems ([SystemsList])
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -32,30 +33,44 @@ impl FromStr for SystemsListFlakeRef {
 pub struct SystemsList(pub Vec<System>);
 
 impl SystemsList {
-    pub async fn from_flake(url: &SystemsListFlakeRef) -> Result<Self> {
+    pub async fn from_flake(url: &SystemsListFlakeRef, build_cfg: &BuildConfig) -> Result<Self> {
         // Nix eval, and then return the systems
-        let systems = nix_import_flake::<Vec<System>>(&url.0).await?;
+        let systems = nix_import_flake::<Vec<System>>(&url.0, build_cfg).await?;
         Ok(SystemsList(systems))
     }
 }
 
-pub async fn nix_import_flake<T>(url: &FlakeUrl) -> Result<T, NixCmdError>
+pub async fn nix_import_flake<T>(url: &FlakeUrl, build_cfg: &BuildConfig) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
     let flake_path =
-        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0)).await?;
-    let v = nix_eval_impure_expr(format!("import {}", flake_path)).await?;
+        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0), build_cfg).await?;
+    let v = nix_eval_impure_expr(format!("import {}", flake_path), build_cfg).await?;
     Ok(v)
 }
 
-async fn nix_eval_impure_expr<T>(expr: String) -> Result<T, NixCmdError>
+async fn nix_eval_impure_expr<T>(expr: String, build_cfg: &BuildConfig) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
     let nix = crate::nixcmd().await;
+    // Base arguments for the nix command
+    let base_args = vec![
+        "eval".to_string(),
+        "--impure".to_string(),
+        "--json".to_string(),
+        "--expr".to_string(),
+        expr,
+    ];
+
+    // Combine base arguments with additional arguments
+     let combined_args: Vec<String> = base_args.into_iter().chain(build_cfg.extra_nix_global_args.clone().into_iter()).collect();
+
+    // Convert the combined_args to a slice of &str
+    let args_slice: Vec<&str> = combined_args.iter().map(AsRef::as_ref).collect();
     let v = nix
-        .run_with_args_expecting_json::<T>(&["eval", "--impure", "--json", "--expr", &expr])
+        .run_with_args_expecting_json::<T>(&args_slice)
         .await?;
     Ok(v)
 }
