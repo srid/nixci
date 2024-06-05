@@ -137,8 +137,10 @@ pub struct BuildConfig {
 }
 
 impl BuildConfig {
-    pub async fn get_systems(&self, build_cfg: &BuildConfig) -> Result<Vec<System>> {
-        let systems = SystemsList::from_flake(&self.systems, build_cfg).await?.0;
+    pub async fn get_systems(&self) -> Result<Vec<System>> {
+        let systems = SystemsList::from_flake(&self.systems, &self.option)
+            .await?
+            .0;
         if systems.is_empty() {
             let current_system = get_current_system().await?;
             Ok(vec![current_system])

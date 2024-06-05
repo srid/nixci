@@ -33,25 +33,24 @@ impl FromStr for SystemsListFlakeRef {
 pub struct SystemsList(pub Vec<System>);
 
 impl SystemsList {
-    pub async fn from_flake(url: &SystemsListFlakeRef, build_cfg: &BuildConfig) -> Result<Self> {
+    pub async fn from_flake(url: &SystemsListFlakeRef, option: &Vec<String>) -> Result<Self> {
         // Nix eval, and then return the systems
-        let systems = nix_import_flake::<Vec<System>>(&url.0, build_cfg).await?;
+        let systems = nix_import_flake::<Vec<System>>(&url.0, option).await?;
         Ok(SystemsList(systems))
     }
 }
 
-pub async fn nix_import_flake<T>(url: &FlakeUrl, build_cfg: &BuildConfig) -> Result<T, NixCmdError>
+pub async fn nix_import_flake<T>(url: &FlakeUrl, option: &Vec<String>) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
     let flake_path =
-        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0), build_cfg)
-            .await?;
-    let v = nix_eval_impure_expr(format!("import {}", flake_path), build_cfg).await?;
+        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0), option).await?;
+    let v = nix_eval_impure_expr(format!("import {}", flake_path), option).await?;
     Ok(v)
 }
 
-async fn nix_eval_impure_expr<T>(expr: String, build_cfg: &BuildConfig) -> Result<T, NixCmdError>
+async fn nix_eval_impure_expr<T>(expr: String, option: &Vec<String>) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
@@ -67,10 +66,10 @@ where
     // Combined arguments
     let mut combined_args: Vec<String> = base_args;
 
-    // Conditionally append "--option" and build_cfg.option values
-    if !build_cfg.option.is_empty() {
+    // Conditionally append "--option" and option values
+    if !option.is_empty() {
         combined_args.push("--option".to_string());
-        combined_args.extend(build_cfg.option.clone());
+        combined_args.extend(option.clone());
     }
 
     let args_slice: Vec<&str> = combined_args.iter().map(AsRef::as_ref).collect();
