@@ -53,7 +53,7 @@ async fn nix_eval_impure_expr<T>(expr: String) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
-    let nix = crate::nixcmd().await;
+    let nix = crate::NIXCMD.get().unwrap();
     let v = nix
         .run_with_args_expecting_json::<T>(&["eval", "--impure", "--json", "--expr", &expr])
         .await?;
@@ -64,6 +64,13 @@ where
 #[cfg(feature = "integration_test")]
 mod tests {
     use super::*;
+
+    #[ctor::ctor]
+    fn init() {
+        crate::NIXCMD
+            .set(nix_rs::command::NixCmd::default())
+            .unwrap();
+    }
 
     #[tokio::test]
     async fn test_empty_systems_list() {

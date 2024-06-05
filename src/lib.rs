@@ -16,18 +16,13 @@ use nix::{
 use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
 
-static NIXCMD: OnceCell<NixCmd> = OnceCell::const_new();
-
-pub async fn nixcmd() -> &'static NixCmd {
-    NIXCMD
-        .get_or_init(|| async { NixCmd::with_flakes().await.unwrap() })
-        .await
-}
+pub static NIXCMD: OnceCell<NixCmd> = OnceCell::const_new();
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 #[instrument(name = "nixci", skip(args))]
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
     tracing::debug!("Args: {args:?}");
+    NIXCMD.set(args.nixcmd.with_flakes().await?)?;
     let cfg = args.command.get_config().await?;
     match args.command {
         cli::Command::Build(build_cfg) => nixci_build(args.verbose, &build_cfg, &cfg).await,

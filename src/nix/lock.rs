@@ -5,7 +5,7 @@ use nix_rs::flake::url::FlakeUrl;
 
 /// Make sure that the `flake.lock` file is in sync.
 pub async fn nix_flake_lock_check(url: &FlakeUrl) -> Result<()> {
-    let nix = crate::nixcmd().await;
+    let nix = crate::NIXCMD.get().unwrap();
     let mut cmd = nix.command();
     cmd.args(["flake", "lock", "--no-update-lock-file", &url.0]);
     nix_rs::command::trace_cmd(&cmd);

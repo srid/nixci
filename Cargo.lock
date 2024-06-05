@@ -791,12 +791,13 @@ dependencies = [
 
 [[package]]
 name = "nix_rs"
-version = "0.3.3"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aaac3ae7302d82acade21e9ca26d7cb052fa9b713ec77985def9c6d19dbe63cc"
+checksum = "da25f502c0280182deca738d14d878c77e5886d5d9af60e8d51c150afbd9b7e5"
 dependencies = [
  "bytesize",
  "cfg-if",
+ "clap",
  "colored",
  "is_proc_translated",
  "os_info",
@@ -814,7 +815,7 @@ dependencies = [
 
 [[package]]
 name = "nixci"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap",

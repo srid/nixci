@@ -35,7 +35,7 @@ impl FromStr for DevourFlakeOutput {
 pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<DevourFlakeOutput> {
     // TODO: Use nix_rs here as well
     // In the context of doing https://github.com/srid/nixci/issues/15
-    let nix = crate::nixcmd().await;
+    let nix = crate::NIXCMD.get().unwrap();
     let mut cmd = nix.command();
     let devour_flake_url = format!("{}#default", env!("DEVOUR_FLAKE"));
     cmd.args([
