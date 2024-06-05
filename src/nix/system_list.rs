@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
+use crate::cli::BuildConfig;
 use anyhow::Result;
 use nix_rs::{
     command::NixCmdError,
     flake::{system::System, url::FlakeUrl},
 };
-use crate::cli::BuildConfig;
 
 /// A flake URL that references a list of systems ([SystemsList])
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,7 +45,8 @@ where
     T: Default + serde::de::DeserializeOwned,
 {
     let flake_path =
-        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0), build_cfg).await?;
+        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0), build_cfg)
+            .await?;
     let v = nix_eval_impure_expr(format!("import {}", flake_path), build_cfg).await?;
     Ok(v)
 }
@@ -75,9 +76,7 @@ where
     let args_slice: Vec<&str> = combined_args.iter().map(AsRef::as_ref).collect();
 
     let nix = crate::nixcmd().await;
-    let v = nix
-        .run_with_args_expecting_json::<T>(&args_slice)
-        .await?;
+    let v = nix.run_with_args_expecting_json::<T>(&args_slice).await?;
     Ok(v)
 }
 
