@@ -132,7 +132,7 @@ impl SubFlakish {
         build_cfg: &BuildConfig,
         flake_url: &FlakeUrl,
     ) -> Vec<String> {
-        std::iter::once(flake_url.sub_flake_url(self.dir.clone()).0)
+        let mut args: Vec<String> = std::iter::once(flake_url.sub_flake_url(self.dir.clone()).0)
             .chain(self.override_inputs.iter().flat_map(|(k, v)| {
                 [
                     "--override-input".to_string(),
@@ -149,7 +149,15 @@ impl SubFlakish {
                 build_cfg.systems.0 .0.clone(),
             ])
             .chain(build_cfg.extra_nix_build_args.iter().cloned())
-            .collect()
+            .collect();
+
+        // Conditionally append options from build_cfg
+        if !build_cfg.option.is_empty() {
+            args.push("--option".to_string());
+            args.extend(build_cfg.option.iter().cloned());
+        }
+
+        args
     }
 }
 

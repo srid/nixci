@@ -75,7 +75,7 @@ async fn nixci_subflakes(
 ) -> anyhow::Result<HashSet<DrvOut>> {
     let mut result = HashSet::new();
 
-    let systems = build_cfg.get_systems().await?;
+    let systems = build_cfg.get_systems(build_cfg).await?;
 
     for (subflake_name, subflake) in &cfg.subflakes.0 {
         let name = format!("{}.{}", cfg.name, subflake_name).italic();
