@@ -55,7 +55,7 @@ pub struct CliArgs {
     /// Whether to be verbose
     ///
     /// If enabled, also the full nix command output is shown.
-    #[arg(short = 'v')]
+    #[arg(short = 'v', long)]
     pub verbose: bool,
 
     /// Nix command global options
