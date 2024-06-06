@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use nix_rs::{
-    command::NixCmdError,
+    command::{NixCmd, NixCmdError},
     flake::{system::System, url::FlakeUrl},
 };
 
@@ -32,29 +32,28 @@ impl FromStr for SystemsListFlakeRef {
 pub struct SystemsList(pub Vec<System>);
 
 impl SystemsList {
-    pub async fn from_flake(url: &SystemsListFlakeRef) -> Result<Self> {
+    pub async fn from_flake(cmd: &NixCmd, url: &SystemsListFlakeRef) -> Result<Self> {
         // Nix eval, and then return the systems
-        let systems = nix_import_flake::<Vec<System>>(&url.0).await?;
+        let systems = nix_import_flake::<Vec<System>>(cmd, &url.0).await?;
         Ok(SystemsList(systems))
     }
 }
 
-pub async fn nix_import_flake<T>(url: &FlakeUrl) -> Result<T, NixCmdError>
+pub async fn nix_import_flake<T>(cmd: &NixCmd, url: &FlakeUrl) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
     let flake_path =
-        nix_eval_impure_expr::<String>(format!("builtins.getFlake \"{}\"", url.0)).await?;
-    let v = nix_eval_impure_expr(format!("import {}", flake_path)).await?;
+        nix_eval_impure_expr::<String>(cmd, format!("builtins.getFlake \"{}\"", url.0)).await?;
+    let v = nix_eval_impure_expr(cmd, format!("import {}", flake_path)).await?;
     Ok(v)
 }
 
-async fn nix_eval_impure_expr<T>(expr: String) -> Result<T, NixCmdError>
+async fn nix_eval_impure_expr<T>(cmd: &NixCmd, expr: String) -> Result<T, NixCmdError>
 where
     T: Default + serde::de::DeserializeOwned,
 {
-    let nix = crate::NIXCMD.get().unwrap();
-    let v = nix
+    let v = cmd
         .run_with_args_expecting_json::<T>(&["eval", "--impure", "--json", "--expr", &expr])
         .await?;
     Ok(v)
@@ -65,18 +64,12 @@ where
 mod tests {
     use super::*;
 
-    #[ctor::ctor]
-    fn init() {
-        crate::NIXCMD
-            .set(nix_rs::command::NixCmd::default())
-            .unwrap();
-    }
-
     #[tokio::test]
     async fn test_empty_systems_list() {
-        let systems = SystemsList::from_flake(&SystemsListFlakeRef(FlakeUrl(
-            "github:nix-systems/empty".to_string(),
-        )))
+        let systems = SystemsList::from_flake(
+            &NixCmd::default(),
+            &SystemsListFlakeRef(FlakeUrl("github:nix-systems/empty".to_string())),
+        )
         .await
         .unwrap();
         assert_eq!(systems.0, vec![]);
@@ -84,9 +77,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_systems_list() {
-        let systems = SystemsList::from_flake(&SystemsListFlakeRef(FlakeUrl(
-            "github:nix-systems/default-darwin".to_string(),
-        )))
+        let systems = SystemsList::from_flake(
+            &NixCmd::default(),
+            &SystemsListFlakeRef(FlakeUrl("github:nix-systems/default-darwin".to_string())),
+        )
         .await
         .unwrap();
         assert_eq!(

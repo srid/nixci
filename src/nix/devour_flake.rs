@@ -1,6 +1,7 @@
 //! Rust support for invoking <https://github.com/srid/devour-flake>
 
 use anyhow::{bail, Context, Result};
+use nix_rs::command::NixCmd;
 use std::{collections::HashSet, path::PathBuf, process::Stdio, str::FromStr};
 use tokio::io::{AsyncBufReadExt, BufReader};
 
@@ -32,12 +33,15 @@ impl FromStr for DevourFlakeOutput {
     }
 }
 
-pub async fn devour_flake(verbose: bool, args: Vec<String>) -> Result<DevourFlakeOutput> {
+pub async fn devour_flake(
+    nixcmd: &NixCmd,
+    verbose: bool,
+    args: Vec<String>,
+) -> Result<DevourFlakeOutput> {
     // TODO: Use nix_rs here as well
     // In the context of doing https://github.com/srid/nixci/issues/15
-    let nix = crate::NIXCMD.get().unwrap();
-    let mut cmd = nix.command();
     let devour_flake_url = format!("{}#default", env!("DEVOUR_FLAKE"));
+    let mut cmd = nixcmd.command();
     cmd.args([
         "build",
         &devour_flake_url,

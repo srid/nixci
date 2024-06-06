@@ -1,7 +1,10 @@
 use std::collections::BTreeMap;
 
 use anyhow::Result;
-use nix_rs::flake::{eval::nix_eval_attr_json, system::System, url::FlakeUrl};
+use nix_rs::{
+    command::NixCmd,
+    flake::{eval::nix_eval_attr_json, system::System, url::FlakeUrl},
+};
 use serde::Deserialize;
 
 use crate::cli::BuildConfig;
@@ -44,8 +47,7 @@ impl Config {
     /// let cfg = Config::from_flake_url(&url).await?;
     /// ```
     /// along with the config.
-    pub async fn from_flake_url(url: &FlakeUrl) -> Result<Config> {
-        let cmd = crate::NIXCMD.get().unwrap();
+    pub async fn from_flake_url(cmd: &NixCmd, url: &FlakeUrl) -> Result<Config> {
         let (flake_url, attr) = url.split_attr();
         let nested_attr = attr.as_list();
         let (name, selected_subflake) = match nested_attr.as_slice() {
@@ -166,7 +168,9 @@ mod tests {
             "github:srid/haskell-flake/76214cf8b0d77ed763d1f093ddce16febaf07365#default.dev"
                 .to_string(),
         );
-        let cfg = Config::from_flake_url(url).await.unwrap();
+        let cfg = Config::from_flake_url(&NixCmd::default(), url)
+            .await
+            .unwrap();
         assert_eq!(cfg.name, "default");
         assert_eq!(cfg.selected_subflake, Some("dev".to_string()));
         assert_eq!(cfg.subflakes.0.len(), 7);
