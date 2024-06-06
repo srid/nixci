@@ -5,7 +5,6 @@ pub mod logging;
 pub mod nix;
 
 use std::collections::HashSet;
-use tokio::sync::OnceCell;
 
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
@@ -16,16 +15,15 @@ use nix::{
 use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
 use tracing::instrument;
 
-pub static NIXCMD: OnceCell<NixCmd> = OnceCell::const_new();
-
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 #[instrument(name = "nixci", skip(args))]
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
     tracing::debug!("Args: {args:?}");
-    NIXCMD.set(args.nixcmd.with_flakes().await?)?;
-    let cfg = args.command.get_config().await?;
+    let cfg = args.command.get_config(&args.nixcmd).await?;
     match args.command {
-        cli::Command::Build(build_cfg) => nixci_build(args.verbose, &build_cfg, &cfg).await,
+        cli::Command::Build(build_cfg) => {
+            nixci_build(&args.nixcmd, args.verbose, &build_cfg, &cfg).await
+        }
         cli::Command::DumpGithubActionsMatrix { systems, .. } => {
             let matrix = github::matrix::GitHubMatrix::from(systems, &cfg.subflakes);
             println!("{}", serde_json::to_string(&matrix)?);
@@ -35,13 +33,14 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
 }
 
 async fn nixci_build(
+    cmd: &NixCmd,
     verbose: bool,
     build_cfg: &BuildConfig,
     cfg: &config::Config,
 ) -> anyhow::Result<Vec<StorePath>> {
     let mut all_outs = HashSet::new();
 
-    let all_devour_flake_outs = nixci_subflakes(verbose, build_cfg, cfg).await?;
+    let all_devour_flake_outs = nixci_subflakes(cmd, verbose, build_cfg, cfg).await?;
 
     if build_cfg.print_all_dependencies {
         let all_deps = NixStoreCmd
@@ -64,13 +63,14 @@ async fn nixci_build(
 }
 
 async fn nixci_subflakes(
+    cmd: &NixCmd,
     verbose: bool,
     build_cfg: &BuildConfig,
     cfg: &config::Config,
 ) -> anyhow::Result<HashSet<DrvOut>> {
     let mut result = HashSet::new();
 
-    let systems = build_cfg.get_systems().await?;
+    let systems = build_cfg.get_systems(cmd).await?;
 
     for (subflake_name, subflake) in &cfg.subflakes.0 {
         let name = format!("{}.{}", cfg.name, subflake_name).italic();
@@ -84,8 +84,15 @@ async fn nixci_subflakes(
         }
         tracing::info!("🍎 {}", name);
         if subflake.can_build_on(&systems) {
-            let outs =
-                nixci_subflake(verbose, build_cfg, &cfg.flake_url, subflake_name, subflake).await?;
+            let outs = nixci_subflake(
+                cmd,
+                verbose,
+                build_cfg,
+                &cfg.flake_url,
+                subflake_name,
+                subflake,
+            )
+            .await?;
             result.extend(outs.0);
         } else {
             tracing::info!(
@@ -101,6 +108,7 @@ async fn nixci_subflakes(
 
 #[instrument(skip(build_cfg, url))]
 async fn nixci_subflake(
+    cmd: &NixCmd,
     verbose: bool,
     build_cfg: &BuildConfig,
     url: &FlakeUrl,
@@ -108,10 +116,10 @@ async fn nixci_subflake(
     subflake: &config::SubFlakish,
 ) -> anyhow::Result<DevourFlakeOutput> {
     if subflake.override_inputs.is_empty() {
-        nix::lock::nix_flake_lock_check(&url.sub_flake_url(subflake.dir.clone())).await?;
+        nix::lock::nix_flake_lock_check(cmd, &url.sub_flake_url(subflake.dir.clone())).await?;
     }
 
     let nix_args = subflake.nix_build_args_for_flake(build_cfg, url);
-    let outs = nix::devour_flake::devour_flake(verbose, nix_args).await?;
+    let outs = nix::devour_flake::devour_flake(cmd, verbose, nix_args).await?;
     Ok(outs)
 }

@@ -66,6 +66,15 @@ pub struct CliArgs {
     pub command: Command,
 }
 
+impl CliArgs {
+    /// Parse `CliArgs` from command-line args
+    pub async fn parse() -> Result<Self, NixCmdError> {
+        let mut args = <Self as Parser>::parse();
+        args.nixcmd = args.nixcmd.with_flakes().await?;
+        Ok(args)
+    }
+}
+
 #[derive(Debug, Subcommand)]
 pub enum Command {
     /// Build all outputs of a flake
@@ -89,14 +98,14 @@ pub enum Command {
 
 impl Command {
     /// Get the nixci [config::Config] associated with this subcommand
-    pub async fn get_config(&self) -> anyhow::Result<config::Config> {
+    pub async fn get_config(&self, cmd: &NixCmd) -> anyhow::Result<config::Config> {
         let flake_ref = match self {
             Command::Build(build_cfg) => &build_cfg.flake_ref,
             Command::DumpGithubActionsMatrix { flake_ref, .. } => flake_ref,
         };
         let url = flake_ref.to_flake_url().await?;
         tracing::info!("{}", format!("🍏 {}", url.0).bold());
-        let cfg = config::Config::from_flake_url(&url).await?;
+        let cfg = config::Config::from_flake_url(cmd, &url).await?;
         tracing::debug!("Config: {cfg:?}");
         Ok(cfg)
     }
@@ -136,10 +145,10 @@ pub struct BuildConfig {
 }
 
 impl BuildConfig {
-    pub async fn get_systems(&self) -> Result<Vec<System>> {
-        let systems = SystemsList::from_flake(&self.systems).await?.0;
+    pub async fn get_systems(&self, cmd: &NixCmd) -> Result<Vec<System>> {
+        let systems = SystemsList::from_flake(cmd, &self.systems).await?.0;
         if systems.is_empty() {
-            let current_system = get_current_system().await?;
+            let current_system = get_current_system(cmd).await?;
             Ok(vec![current_system])
         } else {
             Ok(systems)
@@ -147,8 +156,7 @@ impl BuildConfig {
     }
 }
 
-async fn get_current_system() -> Result<System, NixCmdError> {
-    let cmd = crate::NIXCMD.get().unwrap();
+async fn get_current_system(cmd: &NixCmd) -> Result<System, NixCmdError> {
     let config = NixConfig::from_nix(cmd).await?;
     Ok(config.system.value)
 }
