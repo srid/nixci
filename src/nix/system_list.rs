@@ -34,8 +34,43 @@ pub struct SystemsList(pub Vec<System>);
 impl SystemsList {
     pub async fn from_flake(cmd: &NixCmd, url: &SystemsListFlakeRef) -> Result<Self> {
         // Nix eval, and then return the systems
+        match SystemsList::from_known_flake(url) {
+            Some(systems) => Ok(systems),
+            None => SystemsList::from_remote_flake(cmd, url).await,
+        }
+    }
+
+    async fn from_remote_flake(cmd: &NixCmd, url: &SystemsListFlakeRef) -> Result<Self> {
         let systems = nix_import_flake::<Vec<System>>(cmd, &url.0).await?;
         Ok(SystemsList(systems))
+    }
+
+    fn from_known_flake(url: &SystemsListFlakeRef) -> Option<Self> {
+        match url.0 .0.as_str() {
+            "github:nix-systems/empty" => Some(SystemsList(vec![])),
+            "github:nix-systems/default-darwin" => Some(SystemsList(vec![
+                System::Darwin(nix_rs::flake::system::Arch::Aarch64),
+                System::Darwin(nix_rs::flake::system::Arch::X86_64),
+            ])),
+            "github:nix-systems/default-linux" => Some(SystemsList(vec![
+                System::Linux(nix_rs::flake::system::Arch::Aarch64),
+                System::Linux(nix_rs::flake::system::Arch::X86_64),
+            ])),
+            "github:nix-systems/aarch64-darwin" => Some(SystemsList(vec![System::Darwin(
+                nix_rs::flake::system::Arch::Aarch64,
+            )])),
+            "github:nix-systems/aarch64-linux" => Some(SystemsList(vec![System::Linux(
+                nix_rs::flake::system::Arch::Aarch64,
+            )])),
+            "github:nix-systems/x86_64-darwin" => Some(SystemsList(vec![System::Darwin(
+                nix_rs::flake::system::Arch::X86_64,
+            )])),
+            "github:nix-systems/x86_64-linux" => Some(SystemsList(vec![System::Linux(
+                nix_rs::flake::system::Arch::X86_64,
+            )])),
+
+            _ => None,
+        }
     }
 }
 
