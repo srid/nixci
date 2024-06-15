@@ -45,30 +45,23 @@ impl SystemsList {
         Ok(SystemsList(systems))
     }
 
+    /// Handle known repos of https://github.com/nix-systems thereby avoiding
+    /// network calls.
     fn from_known_flake(url: &SystemsListFlakeRef) -> Option<Self> {
         match url.0 .0.as_str() {
             "github:nix-systems/empty" => Some(SystemsList(vec![])),
             "github:nix-systems/default-darwin" => Some(SystemsList(vec![
-                System::Darwin(nix_rs::flake::system::Arch::Aarch64),
-                System::Darwin(nix_rs::flake::system::Arch::X86_64),
+                "aarch64-darwin".into(),
+                "x86_64-darwin".into(),
             ])),
             "github:nix-systems/default-linux" => Some(SystemsList(vec![
-                System::Linux(nix_rs::flake::system::Arch::Aarch64),
-                System::Linux(nix_rs::flake::system::Arch::X86_64),
+                "aarch64-linux".into(),
+                "x86_64-linux".into(),
             ])),
-            "github:nix-systems/aarch64-darwin" => Some(SystemsList(vec![System::Darwin(
-                nix_rs::flake::system::Arch::Aarch64,
-            )])),
-            "github:nix-systems/aarch64-linux" => Some(SystemsList(vec![System::Linux(
-                nix_rs::flake::system::Arch::Aarch64,
-            )])),
-            "github:nix-systems/x86_64-darwin" => Some(SystemsList(vec![System::Darwin(
-                nix_rs::flake::system::Arch::X86_64,
-            )])),
-            "github:nix-systems/x86_64-linux" => Some(SystemsList(vec![System::Linux(
-                nix_rs::flake::system::Arch::X86_64,
-            )])),
-
+            "github:nix-systems/aarch64-darwin" => Some(SystemsList(vec!["aarch64-darwin".into()])),
+            "github:nix-systems/aarch64-linux" => Some(SystemsList(vec!["aarch64-linux".into()])),
+            "github:nix-systems/x86_64-darwin" => Some(SystemsList(vec!["x86_64-darwin".into()])),
+            "github:nix-systems/x86_64-linux" => Some(SystemsList(vec!["x86_64-linux".into()])),
             _ => None,
         }
     }
