@@ -112,18 +112,44 @@ mod tests {
 
     #[tokio::test]
     async fn test_systems_list() {
-        let systems = SystemsList::from_flake(
-            &NixCmd::default(),
-            &SystemsListFlakeRef(FlakeUrl("github:nix-systems/default-darwin".to_string())),
+        assert_systems_list(
+            "github:nix-systems/default-linux",
+            vec!["aarch64-linux".into(), "x86_64-linux".into()],
         )
-        .await
-        .unwrap();
-        assert_eq!(
-            systems.0,
-            vec![
-                System::Darwin(nix_rs::flake::system::Arch::Aarch64),
-                System::Darwin(nix_rs::flake::system::Arch::X86_64)
-            ]
-        );
+        .await;
+        assert_systems_list(
+            "github:nix-systems/default-darwin",
+            vec!["aarch64-darwin".into(), "x86_64-darwin".into()],
+        )
+        .await;
+        assert_systems_list(
+            "github:nix-systems/aarch64-linux",
+            vec!["aarch64-linux".into()],
+        )
+        .await;
+        assert_systems_list(
+            "github:nix-systems/aarch64-darwin",
+            vec!["aarch64-darwin".into()],
+        )
+        .await;
+        assert_systems_list(
+            "github:nix-systems/x86_64-linux",
+            vec!["x86_64-linux".into()],
+        )
+        .await;
+        assert_systems_list(
+            "github:nix-systems/x86_64-darwin",
+            vec!["x86_64-darwin".into()],
+        )
+        .await;
+        assert_systems_list("github:nix-systems/empty", vec![]).await;
+    }
+
+    async fn assert_systems_list(url: &str, expected: Vec<System>) {
+        let cmd = NixCmd::default();
+        let systems = SystemsList::from_flake(&cmd, &SystemsListFlakeRef(url.into()))
+            .await
+            .unwrap();
+        assert_eq!(systems.0, expected);
     }
 }
