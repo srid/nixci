@@ -89,6 +89,9 @@ jobs:
       - run: nixci build --systems "github:nix-systems/${{ matrix.system }}" ".#default.${{ matrix.subflake }}"
 ```
 
+> [!TIP] 
+> If your builds fail due to GitHub's rate limiting, consider passing `--extra-access-tokens` (see [an example PR](https://github.com/srid/haskell-flake/pull/329)).
+
 ## Configuring
 
 By default, `nixci` will build the top-level flake, but you can tell it to build sub-flakes by adding the following output to your top-level flake:
