@@ -90,7 +90,7 @@ jobs:
 ```
 
 > [!TIP] 
-> If your builds fail due to GitHub's rate limiting, consider passing `--extra-access-tokens` (see [an example PR](https://github.com/srid/haskell-flake/pull/329)).
+> If your builds fail due to GitHub's rate limiting, consider passing `--extra-access-tokens` (see [an example PR](https://github.com/srid/nixos-flake/pull/55)).
 
 ## Configuring
 
