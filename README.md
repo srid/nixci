@@ -20,7 +20,7 @@ The [stdout] of `nixci` will be a list of store paths built.
 
 ### From nixpkgs
 
-`nixpkgs` contains [version 0.5.0](https://github.com/NixOS/nixpkgs/pull/320437) of nixci that you can install using `nix profile nixpkgs#nixci` or run using `nix run nixpkgs#nixci`.
+`nixpkgs` contains [version 0.5.0](https://github.com/NixOS/nixpkgs/pull/320437) of nixci that you can install using `nix profile install nixpkgs#nixci` or run using `nix run nixpkgs#nixci`.
 
 ### From source
 
