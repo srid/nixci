@@ -142,4 +142,5 @@ For discussion of nixci, please post in our [Zulip](https://nixos.zulipchat.com/
 
 ## See also
 
+- [github-nix-ci](https://github.com/juspay/github-nix-ci) - A simple NixOS & nix-darwin module for self-hosting GitHub runners (includes `nixci` by default)
 - [jenkins-nix-ci](https://github.com/juspay/jenkins-nix-ci) - Jenkins NixOS module that supports `nixci` as a Groovy function
