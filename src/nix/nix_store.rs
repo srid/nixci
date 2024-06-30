@@ -128,9 +128,11 @@ impl NixStoreCmd {
             Ok(out)
         } else {
             let exit_code = out.status.code().unwrap_or(1);
+            let stderr_output = String::from_utf8(out.stderr)?;
             bail!(
-                "nix-store --query --requisites --include-outputs failed to run (exited: {})",
-                exit_code
+                "nix-store --query --requisites --include-outputs failed to run (exited: {}).\nStderr: {}",
+                exit_code,
+                stderr_output
             );
         }
     }
