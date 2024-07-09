@@ -67,7 +67,10 @@ impl NixStoreCmd {
     /// This is done by querying the deriver of each output path from [devour_flake::DrvOut] using [nix_store_query_deriver] and
     /// then querying all dependencies of each deriver using [nix_store_query_requisites_with_outputs].
     /// Finally, all dependencies of each deriver are collected and returned as [Vec<StorePath>].
-    pub async fn fetch_all_deps(&self, out_paths: Vec<DrvOut>) -> Result<Vec<StorePath>, NixCmdError> {
+    pub async fn fetch_all_deps(
+        &self,
+        out_paths: Vec<DrvOut>,
+    ) -> Result<Vec<StorePath>, NixCmdError> {
         let mut all_drvs = Vec::new();
         for out in out_paths.iter() {
             let DrvOut(out_path) = out;
@@ -89,13 +92,20 @@ impl NixStoreCmd {
         let mut cmd = self.command();
         cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
         nix_rs::command::trace_cmd(&cmd);
-        let out = cmd.output().await.map_err(CommandError::ChildProcessError)?;
+        let out = cmd
+            .output()
+            .await
+            .map_err(CommandError::ChildProcessError)?;
         if out.status.success() {
             let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
             if drv_path.contains("unknown-deriver") {
                 let exit_code = Some(1);
-                let stderr = Some("nix-store --query --deriver returned UnknownDeriver".to_string());
-                return Err(NixCmdError::from(CommandError::ProcessFailed { stderr, exit_code }));
+                let stderr =
+                    Some("nix-store --query --deriver returned UnknownDeriver".to_string());
+                return Err(NixCmdError::from(CommandError::ProcessFailed {
+                    stderr,
+                    exit_code,
+                }));
             }
             Ok(DrvOut(PathBuf::from(drv_path)))
         } else {
@@ -119,11 +129,14 @@ impl NixStoreCmd {
             &drv_path.0.to_string_lossy().as_ref(),
         ]);
         nix_rs::command::trace_cmd(&cmd);
-        let out = cmd.output().await.map_err(CommandError::ChildProcessError)?;
+        let out = cmd
+            .output()
+            .await
+            .map_err(CommandError::ChildProcessError)?;
         if out.status.success() {
             let out = String::from_utf8(out.stdout)?;
             let out = out
-                .lines()    
+                .lines()
                 .map(|l| l.trim().to_string())
                 .filter(|l| !l.is_empty())
                 .map(PathBuf::from)
