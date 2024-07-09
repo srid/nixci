@@ -92,7 +92,7 @@ pub fn transform_override_inputs(args: &mut Vec<String>) {
     while let Some(arg) = iter.next() {
         if *arg == "--override-input" {
             if let Some(next_arg) = iter.next() {
-                *arg = format!("flake/{}", next_arg);
+                *next_arg = format!("flake/{}", next_arg);
             }
         }
     }
