@@ -1,6 +1,7 @@
 use std::{fmt, path::PathBuf};
 
 use anyhow::{bail, Result};
+use nix_rs::command::{CommandError, NixCmdError};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
@@ -66,7 +67,7 @@ impl NixStoreCmd {
     /// This is done by querying the deriver of each output path from [devour_flake::DrvOut] using [nix_store_query_deriver] and
     /// then querying all dependencies of each deriver using [nix_store_query_requisites_with_outputs].
     /// Finally, all dependencies of each deriver are collected and returned as [Vec<StorePath>].
-    pub async fn fetch_all_deps(&self, out_paths: Vec<DrvOut>) -> Result<Vec<StorePath>> {
+    pub async fn fetch_all_deps(&self, out_paths: Vec<DrvOut>) -> Result<Vec<StorePath>, NixCmdError> {
         let mut all_drvs = Vec::new();
         for out in out_paths.iter() {
             let DrvOut(out_path) = out;
@@ -84,20 +85,18 @@ impl NixStoreCmd {
     }
 
     /// Return the derivation used to build the given build output.
-    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<DrvOut> {
+    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<DrvOut, NixCmdError> {
         let mut cmd = self.command();
         cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
         nix_rs::command::trace_cmd(&cmd);
-        let out = cmd.output().await?;
+        let out = cmd.output().await.map_err(CommandError::ChildProcessError)?;
         if out.status.success() {
             let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
             Ok(DrvOut(PathBuf::from(drv_path)))
         } else {
-            let exit_code = out.status.code().unwrap_or(1);
-            bail!(
-                "nix-store --query --deriver failed to run (exited: {})",
-                exit_code
-            );
+            let stderr = String::from_utf8(out.stderr).ok();
+            let exit_code = out.status.code();
+            Err(CommandError::ProcessFailed { stderr, exit_code }.into())
         }
     }
 
@@ -106,7 +105,7 @@ impl NixStoreCmd {
     async fn nix_store_query_requisites_with_outputs(
         &self,
         drv_path: DrvOut,
-    ) -> Result<Vec<StorePath>> {
+    ) -> Result<Vec<StorePath>, NixCmdError> {
         let mut cmd = self.command();
         cmd.args([
             "--query",
@@ -115,11 +114,11 @@ impl NixStoreCmd {
             &drv_path.0.to_string_lossy().as_ref(),
         ]);
         nix_rs::command::trace_cmd(&cmd);
-        let out = cmd.output().await?;
+        let out = cmd.output().await.map_err(CommandError::ChildProcessError)?;
         if out.status.success() {
             let out = String::from_utf8(out.stdout)?;
             let out = out
-                .lines()
+                .lines()    
                 .map(|l| l.trim().to_string())
                 .filter(|l| !l.is_empty())
                 .map(PathBuf::from)
@@ -127,13 +126,9 @@ impl NixStoreCmd {
                 .collect();
             Ok(out)
         } else {
-            let exit_code = out.status.code().unwrap_or(1);
-            let stderr_output = String::from_utf8(out.stderr)?;
-            bail!(
-                "nix-store --query --requisites --include-outputs failed to run (exited: {}).\nStderr: {}",
-                exit_code,
-                stderr_output
-            );
+            let stderr = String::from_utf8(out.stderr).ok();
+            let exit_code = out.status.code();
+            Err(CommandError::ProcessFailed { stderr, exit_code }.into())
         }
     }
 }
