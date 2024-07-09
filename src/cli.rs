@@ -12,7 +12,10 @@ use nix_rs::{
 use crate::{
     config,
     github::pull_request::{PullRequest, PullRequestRef},
-    nix::system_list::{SystemsList, SystemsListFlakeRef},
+    nix::{
+        devour_flake,
+        system_list::{SystemsList, SystemsListFlakeRef},
+    },
 };
 
 /// A reference to some flake living somewhere
@@ -154,30 +157,10 @@ impl BuildConfig {
             Ok(systems)
         }
     }
-    pub fn preprocess_extra_nix_build_args(&self) -> anyhow::Result<Vec<String>> {
-        let mut modified_args = Vec::new();
-        let mut iter = self.extra_nix_build_args.iter().peekable();
 
-        while let Some(arg) = iter.next() {
-            if arg == "--override-input" {
-                modified_args.push(arg.clone());
-
-                if let Some(next_arg) = iter.next() {
-                    modified_args.push(format!("flake/{}", next_arg));
-                } else {
-                    return Err(anyhow::anyhow!(
-                        "Missing argument after --override-input. See: <https://nix.dev/manual/nix/2.22/command-ref/new-cli/nix3-build#opt-override-input>".to_string()
-                    ));
-                }
-            } else {
-                modified_args.push(arg.clone());
-            }
-        }
-
-        Ok(modified_args)
-    }
     pub fn preprocess(&self) -> anyhow::Result<BuildConfig> {
-        let preprocessed_extra_nix_build_args = self.preprocess_extra_nix_build_args()?;
+        let preprocessed_extra_nix_build_args =
+            devour_flake::transform_override_inputs(&self.extra_nix_build_args)?;
         Ok(BuildConfig {
             flake_ref: self.flake_ref.clone(),
             systems: self.systems.clone(),
