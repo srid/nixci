@@ -71,10 +71,25 @@ pub struct CliArgs {
 
 impl CliArgs {
     /// Parse `CliArgs` from command-line args
-    pub async fn parse() -> Result<Self, NixCmdError> {
+    pub async fn parse() -> anyhow::Result<Self> {
         let mut args = <Self as Parser>::parse();
-        args.nixcmd = args.nixcmd.with_flakes().await?;
+        args.preprocess().await?;
         Ok(args)
+    }
+
+    // Pre-process `CliArgs`
+    pub async fn preprocess(&mut self) -> anyhow::Result<()> {
+        // Avoid using `--extra-experimental-features` if possible.
+        self.nixcmd = self.nixcmd.with_flakes().await?;
+        // Adjust to devour_flake's expectations
+        match &mut self.command {
+            Command::Build(build_cfg) => {
+                build_cfg.extra_nix_build_args =
+                    devour_flake::transform_override_inputs(&build_cfg.extra_nix_build_args)?;
+            }
+            _ => {}
+        }
+        Ok(())
     }
 }
 
@@ -156,17 +171,6 @@ impl BuildConfig {
         } else {
             Ok(systems)
         }
-    }
-
-    pub fn preprocess(&self) -> anyhow::Result<BuildConfig> {
-        let preprocessed_extra_nix_build_args =
-            devour_flake::transform_override_inputs(&self.extra_nix_build_args)?;
-        Ok(BuildConfig {
-            flake_ref: self.flake_ref.clone(),
-            systems: self.systems.clone(),
-            extra_nix_build_args: preprocessed_extra_nix_build_args,
-            print_all_dependencies: self.print_all_dependencies,
-        })
     }
 }
 
