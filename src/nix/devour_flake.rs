@@ -86,25 +86,14 @@ pub async fn devour_flake(
 
 /// Transform `--override-input` arguments to use `flake/` prefix, which
 /// devour_flake expects.
-pub fn transform_override_inputs(args: &Vec<String>) -> Result<Vec<String>> {
-    let mut modified_args = Vec::new();
-    let mut iter = args.iter().peekable();
+pub fn transform_override_inputs(args: &mut Vec<String>) {
+    let mut iter = args.iter_mut().peekable();
 
     while let Some(arg) = iter.next() {
-        if arg == "--override-input" {
-            modified_args.push(arg.clone());
-
+        if *arg == "--override-input" {
             if let Some(next_arg) = iter.next() {
-                modified_args.push(format!("flake/{}", next_arg));
-            } else {
-                return Err(anyhow::anyhow!(
-                    "Missing argument after --override-input. See: <https://nix.dev/manual/nix/2.22/command-ref/new-cli/nix3-build#opt-override-input>".to_string()
-                ));
+                *arg = format!("flake/{}", next_arg);
             }
-        } else {
-            modified_args.push(arg.clone());
         }
     }
-
-    Ok(modified_args)
 }

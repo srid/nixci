@@ -84,8 +84,7 @@ impl CliArgs {
         // Adjust to devour_flake's expectations
         match &mut self.command {
             Command::Build(build_cfg) => {
-                build_cfg.extra_nix_build_args =
-                    devour_flake::transform_override_inputs(&build_cfg.extra_nix_build_args)?;
+                devour_flake::transform_override_inputs(&mut build_cfg.extra_nix_build_args);
             }
             _ => {}
         }
