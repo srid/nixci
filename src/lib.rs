@@ -22,7 +22,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
     let cfg = args.command.get_config(&args.nixcmd).await?;
     match args.command {
         cli::Command::Build(build_cfg) => {
-            nixci_build(&args.nixcmd, args.verbose, &build_cfg, &cfg).await
+            nixci_build(&args.nixcmd, args.verbose, &build_cfg.preprocess()?, &cfg).await
         }
         cli::Command::DumpGithubActionsMatrix { systems, .. } => {
             let matrix = github::matrix::GitHubMatrix::from(systems, &cfg.subflakes);

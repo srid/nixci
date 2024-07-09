@@ -154,6 +154,37 @@ impl BuildConfig {
             Ok(systems)
         }
     }
+    pub fn preprocess_extra_nix_build_args(&self) -> anyhow::Result<Vec<String>> {
+        let mut modified_args = Vec::new();
+        let mut iter = self.extra_nix_build_args.iter().peekable();
+
+        while let Some(arg) = iter.next() {
+            if arg == "--override-input" {
+                modified_args.push(arg.clone());
+
+                if let Some(next_arg) = iter.next() {
+                    modified_args.push(format!("flake/{}", next_arg));
+                } else {
+                    return Err(anyhow::anyhow!(
+                        "Missing argument after --override-input".to_string()
+                    ));
+                }
+            } else {
+                modified_args.push(arg.clone());
+            }
+        }
+
+        Ok(modified_args)
+    }
+    pub fn preprocess(&self) -> anyhow::Result<BuildConfig> {
+        let preprocessed_extra_nix_build_args = self.preprocess_extra_nix_build_args()?;
+        Ok(BuildConfig {
+            flake_ref: self.flake_ref.clone(),
+            systems: self.systems.clone(),
+            extra_nix_build_args: preprocessed_extra_nix_build_args,
+            print_all_dependencies: self.print_all_dependencies,
+        })
+    }
 }
 
 async fn get_current_system(cmd: &NixCmd) -> Result<System, NixCmdError> {
