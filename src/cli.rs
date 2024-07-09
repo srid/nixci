@@ -82,11 +82,8 @@ impl CliArgs {
         // Avoid using `--extra-experimental-features` if possible.
         self.nixcmd = self.nixcmd.with_flakes().await?;
         // Adjust to devour_flake's expectations
-        match &mut self.command {
-            Command::Build(build_cfg) => {
-                devour_flake::transform_override_inputs(&mut build_cfg.extra_nix_build_args);
-            }
-            _ => {}
+        if let Command::Build(build_cfg) = &mut self.command {
+            devour_flake::transform_override_inputs(&mut build_cfg.extra_nix_build_args);
         }
         Ok(())
     }

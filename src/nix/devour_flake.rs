@@ -86,7 +86,7 @@ pub async fn devour_flake(
 
 /// Transform `--override-input` arguments to use `flake/` prefix, which
 /// devour_flake expects.
-pub fn transform_override_inputs(args: &mut Vec<String>) {
+pub fn transform_override_inputs(args: &mut [String]) {
     let mut iter = args.iter_mut().peekable();
 
     while let Some(arg) = iter.next() {
