@@ -166,7 +166,7 @@ impl BuildConfig {
                     modified_args.push(format!("flake/{}", next_arg));
                 } else {
                     return Err(anyhow::anyhow!(
-                        "Missing argument after --override-input".to_string()
+                        "Missing argument after --override-input. See: <https://nix.dev/manual/nix/2.22/command-ref/new-cli/nix3-build#opt-override-input>".to_string()
                     ));
                 }
             } else {
