@@ -1,7 +1,12 @@
+/// Run `nix-store` in Rust
+///
+/// TODO: Upstream this to nix-rs
 use std::{fmt, path::PathBuf};
 
-use anyhow::{bail, Result};
+use anyhow::Result;
+use nix_rs::command::{CommandError, NixCmdError};
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 use tokio::process::Command;
 
 /// Nix derivation output path
@@ -66,7 +71,10 @@ impl NixStoreCmd {
     /// This is done by querying the deriver of each output path from [devour_flake::DrvOut] using [nix_store_query_deriver] and
     /// then querying all dependencies of each deriver using [nix_store_query_requisites_with_outputs].
     /// Finally, all dependencies of each deriver are collected and returned as [Vec<StorePath>].
-    pub async fn fetch_all_deps(&self, out_paths: Vec<DrvOut>) -> Result<Vec<StorePath>> {
+    pub async fn fetch_all_deps(
+        &self,
+        out_paths: Vec<DrvOut>,
+    ) -> Result<Vec<StorePath>, NixStoreCmdError> {
         let mut all_drvs = Vec::new();
         for out in out_paths.iter() {
             let DrvOut(out_path) = out;
@@ -84,20 +92,27 @@ impl NixStoreCmd {
     }
 
     /// Return the derivation used to build the given build output.
-    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<DrvOut> {
+    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<DrvOut, NixStoreCmdError> {
         let mut cmd = self.command();
-        cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
+        cmd.args([
+            "--query",
+            "--valid-derivers",
+            &out_path.to_string_lossy().as_ref(),
+        ]);
         nix_rs::command::trace_cmd(&cmd);
         let out = cmd.output().await?;
         if out.status.success() {
             let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
+            if drv_path == "unknown-deriver" {
+                return Err(NixStoreCmdError::UnknownDeriver);
+            }
             Ok(DrvOut(PathBuf::from(drv_path)))
         } else {
-            let exit_code = out.status.code().unwrap_or(1);
-            bail!(
-                "nix-store --query --deriver failed to run (exited: {})",
-                exit_code
-            );
+            // TODO(refactor): When upstreaming this module to nix-rs, create a
+            // nicer and unified way to create `ProcessFailed`
+            let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
+            let exit_code = out.status.code();
+            Err(CommandError::ProcessFailed { stderr, exit_code }.into())
         }
     }
 
@@ -106,7 +121,7 @@ impl NixStoreCmd {
     async fn nix_store_query_requisites_with_outputs(
         &self,
         drv_path: DrvOut,
-    ) -> Result<Vec<StorePath>> {
+    ) -> Result<Vec<StorePath>, NixStoreCmdError> {
         let mut cmd = self.command();
         cmd.args([
             "--query",
@@ -127,11 +142,41 @@ impl NixStoreCmd {
                 .collect();
             Ok(out)
         } else {
-            let exit_code = out.status.code().unwrap_or(1);
-            bail!(
-                "nix-store --query --requisites --include-outputs failed to run (exited: {})",
-                exit_code
-            );
+            // TODO(refactor): see above
+            let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
+            let exit_code = out.status.code();
+            Err(CommandError::ProcessFailed { stderr, exit_code }.into())
         }
+    }
+}
+
+/// `nix-store` command errors
+#[derive(Error, Debug)]
+pub enum NixStoreCmdError {
+    #[error(transparent)]
+    NixCmdError(#[from] NixCmdError),
+
+    #[error("Unknown deriver")]
+    UnknownDeriver,
+}
+
+impl From<std::io::Error> for NixStoreCmdError {
+    fn from(err: std::io::Error) -> Self {
+        let cmd_error: CommandError = err.into();
+        cmd_error.into()
+    }
+}
+
+impl From<std::string::FromUtf8Error> for NixStoreCmdError {
+    fn from(err: std::string::FromUtf8Error) -> Self {
+        let cmd_error: CommandError = err.into();
+        cmd_error.into()
+    }
+}
+
+impl From<CommandError> for NixStoreCmdError {
+    fn from(err: CommandError) -> Self {
+        let nixcmd_error: NixCmdError = err.into();
+        nixcmd_error.into()
     }
 }
