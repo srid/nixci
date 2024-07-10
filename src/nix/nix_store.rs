@@ -5,6 +5,7 @@ use nix_rs::command::{CommandError, NixCmdError};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::process::Command;
+
 /// Nix derivation output path
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Clone, Hash)]
 pub struct DrvOut(pub PathBuf);
@@ -92,14 +93,9 @@ impl NixStoreCmd {
         let mut cmd = self.command();
         cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
         nix_rs::command::trace_cmd(&cmd);
-        let out = cmd.output().await.map_err(|e| {
-            NixStoreCmdError::NixCmdError(NixCmdError::CmdError(CommandError::ChildProcessError(e)))
-        })?;
+        let out = cmd.output().await?;
         if out.status.success() {
-            let drv_path = String::from_utf8(out.stdout)
-                .map_err(|e| NixStoreCmdError::NixCmdError(NixCmdError::DecodeErrorUtf8(e)))?
-                .trim()
-                .to_string();
+            let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
             if drv_path == "unknown-deriver" {
                 return Err(NixStoreCmdError::UnknownDeriverError);
             }
@@ -107,9 +103,7 @@ impl NixStoreCmd {
         } else {
             let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
             let exit_code = out.status.code();
-            Err(NixStoreCmdError::NixCmdError(NixCmdError::CmdError(
-                CommandError::ProcessFailed { stderr, exit_code },
-            )))
+            Err(CommandError::ProcessFailed { stderr, exit_code }.into())
         }
     }
 
@@ -127,12 +121,9 @@ impl NixStoreCmd {
             &drv_path.0.to_string_lossy().as_ref(),
         ]);
         nix_rs::command::trace_cmd(&cmd);
-        let out = cmd.output().await.map_err(|e| {
-            NixStoreCmdError::NixCmdError(NixCmdError::CmdError(CommandError::ChildProcessError(e)))
-        })?;
+        let out = cmd.output().await?;
         if out.status.success() {
-            let out = String::from_utf8(out.stdout)
-                .map_err(|e| NixStoreCmdError::NixCmdError(NixCmdError::DecodeErrorUtf8(e)))?;
+            let out = String::from_utf8(out.stdout)?;
             let out = out
                 .lines()
                 .map(|l| l.trim().to_string())
@@ -144,9 +135,7 @@ impl NixStoreCmd {
         } else {
             let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
             let exit_code = out.status.code();
-            Err(NixStoreCmdError::NixCmdError(NixCmdError::CmdError(
-                CommandError::ProcessFailed { stderr, exit_code },
-            )))
+            Err(CommandError::ProcessFailed { stderr, exit_code }.into())
         }
     }
 }
@@ -160,4 +149,25 @@ pub enum NixStoreCmdError {
 
     #[error("Unknown deriver")]
     UnknownDeriverError,
+}
+
+impl From<std::io::Error> for NixStoreCmdError {
+    fn from(err: std::io::Error) -> Self {
+        let cmd_error: CommandError = err.into();
+        cmd_error.into()
+    }
+}
+
+impl From<std::string::FromUtf8Error> for NixStoreCmdError {
+    fn from(err: std::string::FromUtf8Error) -> Self {
+        let cmd_error: CommandError = err.into();
+        cmd_error.into()
+    }
+}
+
+impl From<CommandError> for NixStoreCmdError {
+    fn from(err: CommandError) -> Self {
+        let nixcmd_error: NixCmdError = err.into();
+        nixcmd_error.into()
+    }
 }
