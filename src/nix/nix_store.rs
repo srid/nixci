@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::Result;
+use nix_rs::command::{CommandError, NixCmdError};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::process::Command;
@@ -72,7 +73,7 @@ impl NixStoreCmd {
     pub async fn fetch_all_deps(
         &self,
         out_paths: Vec<DrvOut>,
-    ) -> Result<Vec<StorePath>, NixCmdError> {
+    ) -> Result<Vec<StorePath>, NixStoreCmdError> {
         let mut all_drvs = Vec::new();
         for out in out_paths.iter() {
             let DrvOut(out_path) = out;
@@ -90,24 +91,28 @@ impl NixStoreCmd {
     }
 
     /// Return the derivation used to build the given build output.
-    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<DrvOut, NixCmdError> {
+    async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<DrvOut, NixStoreCmdError> {
         let mut cmd = self.command();
         cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
         nix_rs::command::trace_cmd(&cmd);
-        let out = cmd
-            .output()
-            .await
-            .map_err(CommandError::ChildProcessError)?;
+        let out = cmd.output().await.map_err(|e| {
+            NixStoreCmdError::NixCmdError(NixCmdError::CmdError(CommandError::ChildProcessError(e)))
+        })?;
         if out.status.success() {
-            let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
+            let drv_path = String::from_utf8(out.stdout)
+                .map_err(|e| NixStoreCmdError::NixCmdError(NixCmdError::DecodeErrorUtf8(e)))?
+                .trim()
+                .to_string();
             if drv_path == "unknown-deriver" {
-                return Err(NixCmdError::UnknownDeriverError);
+                return Err(NixStoreCmdError::UnknownDeriverError);
             }
             Ok(DrvOut(PathBuf::from(drv_path)))
         } else {
             let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
             let exit_code = out.status.code();
-            Err(CommandError::ProcessFailed { stderr, exit_code }.into())
+            Err(NixStoreCmdError::NixCmdError(NixCmdError::CmdError(
+                CommandError::ProcessFailed { stderr, exit_code },
+            )))
         }
     }
 
@@ -116,7 +121,7 @@ impl NixStoreCmd {
     async fn nix_store_query_requisites_with_outputs(
         &self,
         drv_path: DrvOut,
-    ) -> Result<Vec<StorePath>, NixCmdError> {
+    ) -> Result<Vec<StorePath>, NixStoreCmdError> {
         let mut cmd = self.command();
         cmd.args([
             "--query",
@@ -125,12 +130,12 @@ impl NixStoreCmd {
             &drv_path.0.to_string_lossy().as_ref(),
         ]);
         nix_rs::command::trace_cmd(&cmd);
-        let out = cmd
-            .output()
-            .await
-            .map_err(CommandError::ChildProcessError)?;
+        let out = cmd.output().await.map_err(|e| {
+            NixStoreCmdError::NixCmdError(NixCmdError::CmdError(CommandError::ChildProcessError(e)))
+        })?;
         if out.status.success() {
-            let out = String::from_utf8(out.stdout)?;
+            let out = String::from_utf8(out.stdout)
+                .map_err(|e| NixStoreCmdError::NixCmdError(NixCmdError::DecodeErrorUtf8(e)))?;
             let out = out
                 .lines()
                 .map(|l| l.trim().to_string())
@@ -142,57 +147,19 @@ impl NixStoreCmd {
         } else {
             let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
             let exit_code = out.status.code();
-            Err(CommandError::ProcessFailed { stderr, exit_code }.into())
+            Err(NixStoreCmdError::NixCmdError(NixCmdError::CmdError(
+                CommandError::ProcessFailed { stderr, exit_code },
+            )))
         }
     }
 }
 
 /// Errors when running and interpreting the output of a nix command
 #[derive(Error, Debug)]
-pub enum NixCmdError {
-    #[error("Command error: {0}")]
-    CmdError(#[from] CommandError),
+pub enum NixStoreCmdError {
+    #[error(transparent)]
+    NixCmdError(#[from] NixCmdError),
 
-    #[error("Failed to decode command stdout (utf8 error): {0}")]
-    DecodeErrorUtf8(#[from] std::string::FromUtf8Error),
-
-    #[error("Failed to decode command stdout (from_str error): {0}")]
-    DecodeErrorFromStr(#[from] FromStrError),
-
-    #[error("Failed to decode command stdout (json error): {0}")]
-    DecodeErrorJson(#[from] serde_json::Error),
-
-    #[error("Unknown deriver in drv_path")]
+    #[error("Unknown deriver")]
     UnknownDeriverError,
-}
-
-#[derive(Debug)]
-pub struct FromStrError(String);
-
-impl Display for FromStrError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Failed to parse string: {}", self.0)
-    }
-}
-
-impl std::error::Error for FromStrError {}
-
-#[derive(Error, Debug)]
-pub enum CommandError {
-    #[error("Child process error: {0}")]
-    ChildProcessError(#[from] std::io::Error),
-    #[error(
-        "Process exited unsuccessfully. exit_code={:?}{}",
-        exit_code,
-        match stderr {
-            Some(s) => format!(" stderr={}", s),
-            None => "".to_string()
-        },
-    )]
-    ProcessFailed {
-        stderr: Option<String>,
-        exit_code: Option<i32>,
-    },
-    #[error("Failed to decode command stderr: {0}")]
-    Decode(#[from] std::string::FromUtf8Error),
 }
