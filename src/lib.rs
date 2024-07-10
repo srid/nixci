@@ -6,13 +6,15 @@ pub mod nix;
 
 use std::collections::HashSet;
 
+use anyhow::Context;
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::{
     devour_flake::DevourFlakeOutput,
     nix_store::{DrvOut, NixStoreCmd, StorePath},
 };
-use nix_rs::{command::NixCmd, flake::url::FlakeUrl};
+use nix_health::{traits::Checkable, NixHealth};
+use nix_rs::{command::NixCmd, flake::url::FlakeUrl, info::NixInfo};
 use tracing::instrument;
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
@@ -22,6 +24,9 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
     let cfg = args.command.get_config(&args.nixcmd).await?;
     match args.command {
         cli::Command::Build(build_cfg) => {
+            // First, run the necessary health checks
+            check_nix_version(&args.nixcmd, &cfg.flake_url).await?;
+            // Then, do the build
             nixci_build(&args.nixcmd, args.verbose, &build_cfg, &cfg).await
         }
         cli::Command::DumpGithubActionsMatrix { systems, .. } => {
@@ -122,4 +127,18 @@ async fn nixci_subflake(
     let nix_args = subflake.nix_build_args_for_flake(build_cfg, url);
     let outs = nix::devour_flake::devour_flake(cmd, verbose, nix_args).await?;
     Ok(outs)
+}
+
+pub async fn check_nix_version(nixcmd: &NixCmd, flake_url: &FlakeUrl) -> anyhow::Result<()> {
+    let nix_info = NixInfo::from_nix(nixcmd)
+        .await
+        .with_context(|| "Unable to gather nix info")?;
+    let nix_health = NixHealth::from_flake(flake_url).await?;
+    let checks = nix_health.nix_version.check(&nix_info, Some(&flake_url));
+    let exit_code = NixHealth::print_report_returning_exit_code(&checks, false);
+
+    if exit_code != 0 {
+        std::process::exit(exit_code);
+    }
+    Ok(())
 }
