@@ -1,3 +1,6 @@
+/// Run `nix-store` in Rust
+///
+/// TODO: Upstream this to nix-rs
 use std::{fmt, path::PathBuf};
 
 use anyhow::Result;
@@ -97,7 +100,7 @@ impl NixStoreCmd {
         if out.status.success() {
             let drv_path = String::from_utf8(out.stdout)?.trim().to_string();
             if drv_path == "unknown-deriver" {
-                return Err(NixStoreCmdError::UnknownDeriverError);
+                return Err(NixStoreCmdError::UnknownDeriver);
             }
             Ok(DrvOut(PathBuf::from(drv_path)))
         } else {
@@ -140,15 +143,14 @@ impl NixStoreCmd {
     }
 }
 
-/// Errors when running and interpreting the output of a nix command.
-/// Extended with NixCmdError from nix_rs
+/// `nix-store` command errors
 #[derive(Error, Debug)]
 pub enum NixStoreCmdError {
     #[error(transparent)]
     NixCmdError(#[from] NixCmdError),
 
     #[error("Unknown deriver")]
-    UnknownDeriverError,
+    UnknownDeriver,
 }
 
 impl From<std::io::Error> for NixStoreCmdError {
