@@ -94,7 +94,7 @@ impl NixStoreCmd {
     /// Return the derivation used to build the given build output.
     async fn nix_store_query_deriver(&self, out_path: PathBuf) -> Result<DrvOut, NixStoreCmdError> {
         let mut cmd = self.command();
-        cmd.args(["--query", "--deriver", &out_path.to_string_lossy().as_ref()]);
+        cmd.args(["--query", "--valid-derivers", &out_path.to_string_lossy().as_ref()]);
         nix_rs::command::trace_cmd(&cmd);
         let out = cmd.output().await?;
         if out.status.success() {
