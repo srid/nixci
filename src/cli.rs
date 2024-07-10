@@ -12,7 +12,10 @@ use nix_rs::{
 use crate::{
     config,
     github::pull_request::{PullRequest, PullRequestRef},
-    nix::system_list::{SystemsList, SystemsListFlakeRef},
+    nix::{
+        devour_flake,
+        system_list::{SystemsList, SystemsListFlakeRef},
+    },
 };
 
 /// A reference to some flake living somewhere
@@ -68,10 +71,21 @@ pub struct CliArgs {
 
 impl CliArgs {
     /// Parse `CliArgs` from command-line args
-    pub async fn parse() -> Result<Self, NixCmdError> {
+    pub async fn parse() -> anyhow::Result<Self> {
         let mut args = <Self as Parser>::parse();
-        args.nixcmd = args.nixcmd.with_flakes().await?;
+        args.preprocess().await?;
         Ok(args)
+    }
+
+    // Pre-process `CliArgs`
+    pub async fn preprocess(&mut self) -> anyhow::Result<()> {
+        // Avoid using `--extra-experimental-features` if possible.
+        self.nixcmd = self.nixcmd.with_flakes().await?;
+        // Adjust to devour_flake's expectations
+        if let Command::Build(build_cfg) = &mut self.command {
+            devour_flake::transform_override_inputs(&mut build_cfg.extra_nix_build_args);
+        }
+        Ok(())
     }
 }
 

@@ -83,3 +83,17 @@ pub async fn devour_flake(
         bail!("devour-flake failed to run (exited: {})", exit_code);
     }
 }
+
+/// Transform `--override-input` arguments to use `flake/` prefix, which
+/// devour_flake expects.
+pub fn transform_override_inputs(args: &mut [String]) {
+    let mut iter = args.iter_mut().peekable();
+
+    while let Some(arg) = iter.next() {
+        if *arg == "--override-input" {
+            if let Some(next_arg) = iter.next() {
+                *next_arg = format!("flake/{}", next_arg);
+            }
+        }
+    }
+}
