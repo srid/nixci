@@ -1,7 +1,4 @@
-use std::{
-    fmt::{self, Display},
-    path::PathBuf,
-};
+use std::{fmt, path::PathBuf};
 
 use anyhow::Result;
 use nix_rs::command::{CommandError, NixCmdError};
@@ -154,7 +151,8 @@ impl NixStoreCmd {
     }
 }
 
-/// Errors when running and interpreting the output of a nix command
+/// Errors when running and interpreting the output of a nix command.
+/// Extended with NixCmdError from nix_rs
 #[derive(Error, Debug)]
 pub enum NixStoreCmdError {
     #[error(transparent)]
