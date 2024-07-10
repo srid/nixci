@@ -47,7 +47,16 @@
             libiconv
             pkg-config
           ];
-          buildInputs = lib.optionals pkgs.stdenv.isLinux [
+          buildInputs = lib.optionals pkgs.stdenv.isDarwin
+            (
+              with pkgs.darwin.apple_sdk.frameworks; [
+                IOKit
+                # apple_sdk refers to SDK version 10.12. To compile for `x86_64-darwin` we need 11.0
+                # see: https://github.com/NixOS/nixpkgs/pull/261683#issuecomment-1772935802
+                pkgs.darwin.apple_sdk_11_0.frameworks.CoreFoundation
+              ]
+            )
+          ++ lib.optionals pkgs.stdenv.isLinux [
             pkgs.openssl
           ];
           DEVOUR_FLAKE = inputs.devour-flake;
