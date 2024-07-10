@@ -105,7 +105,7 @@ impl NixStoreCmd {
             }
             Ok(DrvOut(PathBuf::from(drv_path)))
         } else {
-            let stderr = String::from_utf8(out.stderr).ok();
+            let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
             let exit_code = out.status.code();
             Err(CommandError::ProcessFailed { stderr, exit_code }.into())
         }
@@ -140,7 +140,7 @@ impl NixStoreCmd {
                 .collect();
             Ok(out)
         } else {
-            let stderr = String::from_utf8(out.stderr).ok();
+            let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
             let exit_code = out.status.code();
             Err(CommandError::ProcessFailed { stderr, exit_code }.into())
         }
