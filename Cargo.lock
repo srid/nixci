@@ -850,7 +850,7 @@ dependencies = [
 [[package]]
 name = "nix_health"
 version = "0.3.0"
-source = "git+https://github.com/juspay/nix-health#9741f8cb9924d78bbbec3c21fb43eee0bcaa0332"
+source = "git+https://github.com/shivaraj-bh/nix-health?branch=expose-extra-lib-funcs#82f5cced9cb12245f77a5ecd18a2f7e1bc746a9a"
 dependencies = [
  "anyhow",
  "bytesize",

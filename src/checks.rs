@@ -1,52 +1,23 @@
 // Health checks to run before running `nixci`
 
-use colored::Colorize;
-use nix_health::{
-    traits::{CheckResult, Checkable},
-    NixHealth,
-};
+use nix_health::traits::Checkable;
+use nix_health::NixHealth;
 use nix_rs::{flake::url::FlakeUrl, info::NixInfo};
 
 pub async fn run_checks(flake_url: &FlakeUrl, nix_info: &NixInfo) -> anyhow::Result<()> {
+    // Works only on `nix-health.default` configuration. To use a different configuration, modify the flake_url to <flake_url>#<attr>
     let nix_health_url = flake_url.with_fully_qualified_root_attr("nix-health");
 
     let nix_health = NixHealth::from_flake(nix_health_url.clone()).await?;
 
-    let checks = nix_health
-        .nix_version
-        .check(&nix_info, Some(nix_health_url));
+    let items: Vec<&dyn Checkable> = vec![&nix_health.nix_version];
 
-    let min_nix_version_check = checks.first().unwrap();
+    let checks = NixHealth::run_checks_with(items.into_iter(), nix_info, Some(nix_health_url));
 
-    match &min_nix_version_check.result {
-        CheckResult::Green => {
-            println!(
-                "{}",
-                format!("✅ {}", min_nix_version_check.title).green().bold()
-            );
-            println!("   {}", min_nix_version_check.info.blue());
-        }
-        CheckResult::Red { msg, suggestion } => {
-            if min_nix_version_check.required {
-                println!(
-                    "{}",
-                    format!("❌ {}", min_nix_version_check.title).red().bold()
-                );
-            } else {
-                println!(
-                    "{}",
-                    format!("🟧 {}", min_nix_version_check.title)
-                        .yellow()
-                        .bold()
-                );
-            }
-            println!("   {}", min_nix_version_check.info.blue());
-            println!("   {}", msg.yellow());
-            println!("   {}", suggestion);
-            if min_nix_version_check.required {
-                std::process::exit(1)
-            }
-        }
+    let exit_code = NixHealth::print_report_returning_exit_code(&checks, false);
+
+    if exit_code != 0 {
+        std::process::exit(exit_code);
     }
     Ok(())
 }

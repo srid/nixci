@@ -31,7 +31,7 @@ nix_rs = { version = "0.5.0", features = ["clap"] }
 # nix_rs = { version = "0.5.0", path = "../nix-rs", features = ["clap"] }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing = "0.1.37"
-nix_health = { git = "https://github.com/juspay/nix-health" }
+nix_health = { git = "https://github.com/shivaraj-bh/nix-health", branch = "expose-extra-lib-funcs" }
 
 [dev-dependencies]
 regex = "1.9"
