@@ -104,6 +104,8 @@ impl NixStoreCmd {
             }
             Ok(DrvOut(PathBuf::from(drv_path)))
         } else {
+            // TODO(refactor): When upstreaming this module to nix-rs, create a
+            // nicer and unified way to create `ProcessFailed`
             let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
             let exit_code = out.status.code();
             Err(CommandError::ProcessFailed { stderr, exit_code }.into())
@@ -136,6 +138,7 @@ impl NixStoreCmd {
                 .collect();
             Ok(out)
         } else {
+            // TODO(refactor): see above
             let stderr = Some(String::from_utf8_lossy(&out.stderr).to_string());
             let exit_code = out.status.code();
             Err(CommandError::ProcessFailed { stderr, exit_code }.into())
