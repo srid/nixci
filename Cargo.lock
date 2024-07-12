@@ -887,8 +887,9 @@ dependencies = [
 
 [[package]]
 name = "nix_health"
-version = "0.4.0"
-source = "git+https://github.com/juspay/nix-health#574e7c43b4674994fe9211cd3f52015fdd501fbf"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c0ce802498f479b5bc68cc5aa3b70e3750ff13ec09fdb6e097f96b6e1f9aae7"
 dependencies = [
  "anyhow",
  "bytesize",
