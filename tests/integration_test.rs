@@ -31,9 +31,11 @@ mod integration_test {
         let lines = stdout.lines();
 
         for line in lines {
-            if !line.starts_with("/nix/store/") {
-                panic!("Unexpected line in stdout: {}", line);
-            }
+            assert!(
+                line.starts_with("/nix/store/"),
+                "Unexpected line in stdout: {}",
+                line
+            );
         }
 
         Ok(())
