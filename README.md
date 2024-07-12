@@ -129,10 +129,13 @@ Some real-world examples of how nixci is used with specific configurations:
 ## What it does
 
 - Optionally, accept a flake config (`nixci.default`) to indicate sub-flakes to build, along with their input overrides
-- Check that `flake.lock` is in sync
-- Use [devour-flake](https://github.com/srid/devour-flake) to build all flake outputs
-    - Support for [flake-schemas](https://github.com/srid/devour-flake/pull/11) is planned
-- Print the built outputs to stdout
+- Preliminary checks
+    - Check that `flake.lock` is in sync
+    - Check that the Nix version is not tool old (using [nix-health](https://github.com/juspay/nix-health))
+- Use [devour-flake](https://github.com/srid/devour-flake) to build all flake outputs[^schema]
+- Print the built store paths to stdout
+
+[^schema]: Support for [flake-schemas](https://github.com/srid/devour-flake/pull/11) is planned
 
 [devour-flake]: https://github.com/srid/devour-flake
 
