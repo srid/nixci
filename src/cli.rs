@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use nix_rs::{
-    command::{NixCmd, NixCmdError},
+    command::NixCmd,
     config::NixConfig,
     flake::{system::System, url::FlakeUrl},
 };
@@ -159,20 +159,15 @@ pub struct BuildConfig {
 }
 
 impl BuildConfig {
-    pub async fn get_systems(&self, cmd: &NixCmd) -> Result<Vec<System>> {
+    pub async fn get_systems(&self, cmd: &NixCmd, nix_config: &NixConfig) -> Result<Vec<System>> {
         let systems = SystemsList::from_flake(cmd, &self.systems).await?.0;
         if systems.is_empty() {
-            let current_system = get_current_system(cmd).await?;
-            Ok(vec![current_system])
+            let current_system = &nix_config.system.value;
+            Ok(vec![current_system.clone()])
         } else {
             Ok(systems)
         }
     }
-}
-
-async fn get_current_system(cmd: &NixCmd) -> Result<System, NixCmdError> {
-    let config = NixConfig::from_nix(cmd).await?;
-    Ok(config.system.value)
 }
 
 #[cfg(test)]
