@@ -14,7 +14,7 @@ use nix::{
     nix_store::{DrvOut, NixStoreCmd, StorePath},
 };
 use nix_health::{traits::Checkable, NixHealth};
-use nix_rs::{command::NixCmd, flake::url::FlakeUrl, info::NixInfo};
+use nix_rs::{command::NixCmd, config::NixConfig, flake::url::FlakeUrl, info::NixInfo};
 use tracing::instrument;
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
@@ -24,10 +24,20 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
     let cfg = args.command.get_config(&args.nixcmd).await?;
     match args.command {
         cli::Command::Build(build_cfg) => {
+            let nix_info = NixInfo::from_nix(&args.nixcmd)
+                .await
+                .with_context(|| "Unable to gather nix info")?;
             // First, run the necessary health checks
-            check_nix_version(&args.nixcmd, &cfg.flake_url).await?;
+            check_nix_version(&cfg.flake_url, &nix_info).await?;
             // Then, do the build
-            nixci_build(&args.nixcmd, args.verbose, &build_cfg, &cfg).await
+            nixci_build(
+                &args.nixcmd,
+                args.verbose,
+                &build_cfg,
+                &cfg,
+                &nix_info.nix_config,
+            )
+            .await
         }
         cli::Command::DumpGithubActionsMatrix { systems, .. } => {
             let matrix = github::matrix::GitHubMatrix::from(systems, &cfg.subflakes);
@@ -42,10 +52,11 @@ async fn nixci_build(
     verbose: bool,
     build_cfg: &BuildConfig,
     cfg: &config::Config,
+    nix_config: &NixConfig,
 ) -> anyhow::Result<Vec<StorePath>> {
     let mut all_outs = HashSet::new();
 
-    let all_devour_flake_outs = nixci_subflakes(cmd, verbose, build_cfg, cfg).await?;
+    let all_devour_flake_outs = nixci_subflakes(cmd, verbose, build_cfg, cfg, nix_config).await?;
 
     if build_cfg.print_all_dependencies {
         let all_deps = NixStoreCmd
@@ -72,10 +83,10 @@ async fn nixci_subflakes(
     verbose: bool,
     build_cfg: &BuildConfig,
     cfg: &config::Config,
+    nix_config: &NixConfig,
 ) -> anyhow::Result<HashSet<DrvOut>> {
     let mut result = HashSet::new();
-
-    let systems = build_cfg.get_systems(cmd).await?;
+    let systems = build_cfg.get_systems(cmd, nix_config).await?;
 
     for (subflake_name, subflake) in &cfg.subflakes.0 {
         let name = format!("{}.{}", cfg.name, subflake_name).italic();
@@ -129,12 +140,9 @@ async fn nixci_subflake(
     Ok(outs)
 }
 
-pub async fn check_nix_version(nixcmd: &NixCmd, flake_url: &FlakeUrl) -> anyhow::Result<()> {
-    let nix_info = NixInfo::from_nix(nixcmd)
-        .await
-        .with_context(|| "Unable to gather nix info")?;
+pub async fn check_nix_version(flake_url: &FlakeUrl, nix_info: &NixInfo) -> anyhow::Result<()> {
     let nix_health = NixHealth::from_flake(flake_url).await?;
-    let checks = nix_health.nix_version.check(&nix_info, Some(flake_url));
+    let checks = nix_health.nix_version.check(nix_info, Some(flake_url));
     let exit_code = NixHealth::print_report_returning_exit_code(&checks);
 
     if exit_code != 0 {
