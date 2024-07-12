@@ -36,9 +36,9 @@ where
 
 pub fn setup_logging(verbose: bool) {
     let env_filter = if verbose {
-        "nixci=debug,nix_rs=debug"
+        "nixci=debug,nix_rs=debug,nix_health=info"
     } else {
-        "nixci=info,nix_rs=info"
+        "nixci=info,nix_rs=info,nix_health=info"
     };
     let builder = tracing_subscriber::fmt()
         .with_writer(io::stderr)

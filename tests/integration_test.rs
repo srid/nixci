@@ -4,8 +4,12 @@
 //! sandbox), and must be manually enabled using the feature flag.
 #[cfg(feature = "integration_test")]
 mod integration_test {
-    use std::path::{Path, PathBuf};
+    use std::{
+        path::{Path, PathBuf},
+        process::Command,
+    };
 
+    use assert_cmd::cargo::CommandCargoExt;
     use clap::Parser;
     use nixci::{self, cli, nix::nix_store::StorePath};
     use regex::Regex;
@@ -13,6 +17,28 @@ mod integration_test {
     #[ctor::ctor]
     fn init() {
         nixci::logging::setup_logging(true);
+    }
+
+    #[tokio::test]
+    /// Run `nixci build` and check if the stdout consists of only /nix/store/* paths
+    async fn nixci_build_output() -> anyhow::Result<()> {
+        let mut cmd = Command::cargo_bin("nixci")?;
+        cmd.arg("build")
+            .arg("github:srid/haskell-multi-nix/c85563721c388629fa9e538a1d97274861bc8321");
+
+        let output = cmd.output()?;
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let lines = stdout.lines();
+
+        for line in lines {
+            assert!(
+                line.starts_with("/nix/store/"),
+                "Unexpected line in stdout: {}",
+                line
+            );
+        }
+
+        Ok(())
     }
 
     #[tokio::test]
