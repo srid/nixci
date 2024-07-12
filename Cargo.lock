@@ -888,7 +888,7 @@ dependencies = [
 [[package]]
 name = "nix_health"
 version = "0.4.0"
-source = "git+https://github.com/shivaraj-bh/nix-health?branch=tracing#23433c18372eef9c44c98350d6d34c4ce16ef64c"
+source = "git+https://github.com/juspay/nix-health#574e7c43b4674994fe9211cd3f52015fdd501fbf"
 dependencies = [
  "anyhow",
  "bytesize",
