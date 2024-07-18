@@ -46,6 +46,7 @@
           ] ++ [
             libiconv
             pkg-config
+            installShellFiles
           ];
           buildInputs = lib.optionals pkgs.stdenv.isDarwin
             (
@@ -60,6 +61,12 @@
             pkgs.openssl
           ];
           DEVOUR_FLAKE = inputs.devour-flake;
+          postInstall = ''
+            installShellCompletion --cmd am \
+              --bash <("$out/bin/nixci" completion bash) \
+              --zsh <("$out/bin/nixci" completion zsh) \
+              --fish <("$out/bin/nixci" completion fish)
+          '';
         };
 
         pre-commit = {

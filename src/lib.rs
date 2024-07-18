@@ -1,4 +1,5 @@
 pub mod cli;
+mod completion;
 pub mod config;
 pub mod github;
 pub mod logging;
@@ -16,6 +17,8 @@ use nix::{
 use nix_health::{traits::Checkable, NixHealth};
 use nix_rs::{command::NixCmd, config::NixConfig, flake::url::FlakeUrl, info::NixInfo};
 use tracing::instrument;
+
+use completion::{CommandExecute, CompletionSubcommand};
 
 /// Run nixci on the given [CliArgs], returning the built outputs in sorted order.
 #[instrument(name = "nixci", skip(args))]
@@ -42,6 +45,11 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
         cli::Command::DumpGithubActionsMatrix { systems, .. } => {
             let matrix = github::matrix::GitHubMatrix::from(systems, &cfg.subflakes);
             println!("{}", serde_json::to_string(&matrix)?);
+            Ok(vec![])
+        }
+        cli::Command::Completion { shell, .. } => {
+            let cmd = CompletionSubcommand::new(shell);
+            cmd.execute().await?;
             Ok(vec![])
         }
     }

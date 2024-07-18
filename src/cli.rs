@@ -108,6 +108,19 @@ pub enum Command {
         #[arg(long, value_parser, value_delimiter = ',')]
         systems: Vec<System>,
     },
+
+    /// Generates shell completion scripts
+    Completion {
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+
+        /// Flake URL or github URL
+        ///
+        /// A specific nixci configuration can be specified
+        /// using '#': e.g. `nixci .#extra-tests`
+        #[arg(default_value = ".")]
+        flake_ref: FlakeRef,
+    },
 }
 
 impl Command {
@@ -116,6 +129,7 @@ impl Command {
         let flake_ref = match self {
             Command::Build(build_cfg) => &build_cfg.flake_ref,
             Command::DumpGithubActionsMatrix { flake_ref, .. } => flake_ref,
+            Command::Completion { flake_ref, .. } => flake_ref,
         };
         let url = flake_ref.to_flake_url().await?;
         tracing::info!("{}", format!("🍏 {}", url.0).bold());
