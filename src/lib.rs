@@ -4,9 +4,11 @@ pub mod github;
 pub mod logging;
 pub mod nix;
 
-use std::collections::HashSet;
-
 use anyhow::{Context, Ok};
+use clap::CommandFactory;
+use clap_complete::generate;
+use std::collections::HashSet;
+use std::io;
 
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
@@ -50,7 +52,9 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
             Ok(vec![])
         }
         cli::Command::Completion { shell, .. } => {
-            cli::Command::generate_completion(shell);
+            let mut cli = CliArgs::command();
+            let name = cli.get_name().to_string();
+            generate(shell, &mut cli, name, &mut io::stdout());
             Ok(vec![])
         }
     }

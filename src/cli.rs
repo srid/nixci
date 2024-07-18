@@ -9,16 +9,13 @@ use crate::{
     },
 };
 use anyhow::Result;
-use clap::CommandFactory;
 use clap::{Parser, Subcommand};
-use clap_complete::{generate, Shell};
 use colored::Colorize;
 use nix_rs::{
     command::NixCmd,
     config::NixConfig,
     flake::{system::System, url::FlakeUrl},
 };
-use std::io;
 
 /// A reference to some flake living somewhere
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,12 +123,6 @@ impl Command {
         let cfg = config::Config::from_flake_url(cmd, &url).await?;
         tracing::debug!("Config: {cfg:?}");
         Ok(cfg)
-    }
-
-    pub fn generate_completion(shell: Shell) {
-        let mut cli = CliArgs::command();
-        let name = cli.get_name().to_string();
-        generate(shell, &mut cli, name, &mut io::stdout());
     }
 }
 
