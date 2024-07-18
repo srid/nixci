@@ -1,14 +1,5 @@
 use std::str::FromStr;
 
-use anyhow::Result;
-use clap::{Parser, Subcommand};
-use colored::Colorize;
-use nix_rs::{
-    command::NixCmd,
-    config::NixConfig,
-    flake::{system::System, url::FlakeUrl},
-};
-
 use crate::{
     config,
     github::pull_request::{PullRequest, PullRequestRef},
@@ -17,6 +8,17 @@ use crate::{
         system_list::{SystemsList, SystemsListFlakeRef},
     },
 };
+use anyhow::Result;
+use clap::CommandFactory;
+use clap::{Parser, Subcommand};
+use clap_complete::{generate, Shell};
+use colored::Colorize;
+use nix_rs::{
+    command::NixCmd,
+    config::NixConfig,
+    flake::{system::System, url::FlakeUrl},
+};
+use std::io;
 
 /// A reference to some flake living somewhere
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -113,29 +115,23 @@ pub enum Command {
     Completion {
         #[arg(value_enum)]
         shell: clap_complete::Shell,
-
-        /// Flake URL or github URL
-        ///
-        /// A specific nixci configuration can be specified
-        /// using '#': e.g. `nixci .#extra-tests`
-        #[arg(default_value = ".")]
-        flake_ref: FlakeRef,
     },
 }
 
 impl Command {
     /// Get the nixci [config::Config] associated with this subcommand
-    pub async fn get_config(&self, cmd: &NixCmd) -> anyhow::Result<config::Config> {
-        let flake_ref = match self {
-            Command::Build(build_cfg) => &build_cfg.flake_ref,
-            Command::DumpGithubActionsMatrix { flake_ref, .. } => flake_ref,
-            Command::Completion { flake_ref, .. } => flake_ref,
-        };
+    pub async fn get_config(cmd: &NixCmd, flake_ref: &FlakeRef) -> anyhow::Result<config::Config> {
         let url = flake_ref.to_flake_url().await?;
         tracing::info!("{}", format!("🍏 {}", url.0).bold());
         let cfg = config::Config::from_flake_url(cmd, &url).await?;
         tracing::debug!("Config: {cfg:?}");
         Ok(cfg)
+    }
+
+    pub fn generate_completion(shell: Shell) {
+        let mut cli = CliArgs::command();
+        let name = cli.get_name().to_string();
+        generate(shell, &mut cli, name, &mut io::stdout());
     }
 }
 
