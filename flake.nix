@@ -62,7 +62,7 @@
           ];
           DEVOUR_FLAKE = inputs.devour-flake;
           postInstall = ''
-            installShellCompletion --cmd am \
+            installShellCompletion --cmd nixci \
               --bash <("$out/bin/nixci" completion bash) \
               --zsh <("$out/bin/nixci" completion zsh) \
               --fish <("$out/bin/nixci" completion fish)
