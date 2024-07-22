@@ -78,21 +78,15 @@
         };
 
         # Flake outputs
-        packages =
-          let
-            inherit (config.rust-project) crates;
-          in
-          {
-            default = self'.packages.nixci.overrideAttrs (oa: {
-              nativeBuildInputs = (oa.nativeBuildInputs or [ ]) ++ [ pkgs.installShellFiles pkgs.nix ];
-              postInstall = ''
-                installShellCompletion --cmd nixci \
-                  --bash <($out/bin/nixci completion bash) \
-                  --zsh <($out/bin/nixci completion zsh) \
-                  --fish <($out/bin/nixci completion fish)
-              '';
-            });
-          };
+        packages.default = self'.packages.nixci.overrideAttrs (oa: {
+          nativeBuildInputs = (oa.nativeBuildInputs or [ ]) ++ [ pkgs.installShellFiles pkgs.nix ];
+          postInstall = ''
+            installShellCompletion --cmd nixci \
+              --bash <($out/bin/nixci completion bash) \
+              --zsh <($out/bin/nixci completion zsh) \
+              --fish <($out/bin/nixci completion fish)
+          '';
+        });
         overlayAttrs.nixci = self'.packages.default;
 
         devShells.default = pkgs.mkShell {
