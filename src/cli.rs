@@ -1,13 +1,5 @@
 use std::str::FromStr;
 
-use crate::{
-    config,
-    github::pull_request::{PullRequest, PullRequestRef},
-    nix::{
-        devour_flake,
-        system_list::{SystemsList, SystemsListFlakeRef},
-    },
-};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -15,6 +7,15 @@ use nix_rs::{
     command::NixCmd,
     config::NixConfig,
     flake::{system::System, url::FlakeUrl},
+};
+
+use crate::{
+    config,
+    github::pull_request::{PullRequest, PullRequestRef},
+    nix::{
+        devour_flake,
+        system_list::{SystemsList, SystemsListFlakeRef},
+    },
 };
 
 /// A reference to some flake living somewhere

@@ -34,7 +34,6 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing = "0.1.37"
 nix_health = "0.4.1"
 clap_complete = "4.4.0"
-async-trait = "0.1.73"
 
 [dev-dependencies]
 regex = "1.9"
