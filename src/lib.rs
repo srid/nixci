@@ -51,7 +51,7 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
             println!("{}", serde_json::to_string(&matrix)?);
             Ok(vec![])
         }
-        cli::Command::Completion { shell, .. } => {
+        cli::Command::Completion { shell } => {
             let mut cli = CliArgs::command();
             let name = cli.get_name().to_string();
             generate(shell, &mut cli, name, &mut io::stdout());
