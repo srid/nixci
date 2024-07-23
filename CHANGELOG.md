@@ -1,4 +1,28 @@
 
+## [1.0.0](https://github.com/srid/nixci/compare/0.5.0...1.0.0) (2024-07-23)
+
+### Features
+
+* add shell completions (#87)
+([1b2caf3](https://github.com/srid/nixci/commit/1b2caf369c739382e2f1c22bfb32096f65addfba)),
+closes [#87](https://github.com/srid/nixci/issues/87)
+* **build:** Check for minimum nix version before running nixci (#75)
+([ac5a011](https://github.com/srid/nixci/commit/ac5a011c76e9537426e0265b20e46f8efea44d40)),
+closes [#75](https://github.com/srid/nixci/issues/75)
+* **cli:** Allow `--override-input` to refer to flake name without `flake/`
+prefix of devour_flake (#74)
+([c17f42f](https://github.com/srid/nixci/commit/c17f42f3480b4b265bac0d94e7169ca01201fb9d)),
+closes [#74](https://github.com/srid/nixci/issues/74)
+
+### Fixes
+
+* `--print-all-dependencies` should ignore `unknown-deriver` (#76)
+([d26bab1](https://github.com/srid/nixci/commit/d26bab116f19ac248a7073de9de3ae8a3ac0271f)),
+closes [#76](https://github.com/srid/nixci/issues/76)
+* `--print-all-dependencies` should handle `unknown-deriver` (#70)
+([16815b6](https://github.com/srid/nixci/commit/16815b6c9e476defd993368d0957335f86f9c055)),
+closes [#70](https://github.com/srid/nixci/issues/70)
+
 ## [0.5.0](https://github.com/srid/nixci/compare/0.4.0...0.5.0) (2024-06-15)
 
 ### Features
