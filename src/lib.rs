@@ -4,9 +4,12 @@ pub mod github;
 pub mod logging;
 pub mod nix;
 
+use anyhow::{Context, Ok};
+use clap::CommandFactory;
+use clap_complete::generate;
 use std::collections::HashSet;
+use std::io;
 
-use anyhow::Context;
 use cli::{BuildConfig, CliArgs};
 use colored::Colorize;
 use nix::{
@@ -21,9 +24,10 @@ use tracing::instrument;
 #[instrument(name = "nixci", skip(args))]
 pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
     tracing::debug!("Args: {args:?}");
-    let cfg = args.command.get_config(&args.nixcmd).await?;
+
     match args.command {
         cli::Command::Build(build_cfg) => {
+            let cfg = cli::Command::get_config(&args.nixcmd, &build_cfg.flake_ref).await?;
             let nix_info = NixInfo::from_nix(&args.nixcmd)
                 .await
                 .with_context(|| "Unable to gather nix info")?;
@@ -39,9 +43,18 @@ pub async fn nixci(args: CliArgs) -> anyhow::Result<Vec<StorePath>> {
             )
             .await
         }
-        cli::Command::DumpGithubActionsMatrix { systems, .. } => {
+        cli::Command::DumpGithubActionsMatrix {
+            systems, flake_ref, ..
+        } => {
+            let cfg = cli::Command::get_config(&args.nixcmd, &flake_ref).await?;
             let matrix = github::matrix::GitHubMatrix::from(systems, &cfg.subflakes);
             println!("{}", serde_json::to_string(&matrix)?);
+            Ok(vec![])
+        }
+        cli::Command::Completion { shell } => {
+            let mut cli = CliArgs::command();
+            let name = cli.get_name().to_string();
+            generate(shell, &mut cli, name, &mut io::stdout());
             Ok(vec![])
         }
     }

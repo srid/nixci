@@ -108,15 +108,17 @@ pub enum Command {
         #[arg(long, value_parser, value_delimiter = ',')]
         systems: Vec<System>,
     },
+
+    /// Generates shell completion scripts
+    Completion {
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+    },
 }
 
 impl Command {
     /// Get the nixci [config::Config] associated with this subcommand
-    pub async fn get_config(&self, cmd: &NixCmd) -> anyhow::Result<config::Config> {
-        let flake_ref = match self {
-            Command::Build(build_cfg) => &build_cfg.flake_ref,
-            Command::DumpGithubActionsMatrix { flake_ref, .. } => flake_ref,
-        };
+    pub async fn get_config(cmd: &NixCmd, flake_ref: &FlakeRef) -> anyhow::Result<config::Config> {
         let url = flake_ref.to_flake_url().await?;
         tracing::info!("{}", format!("🍏 {}", url.0).bold());
         let cfg = config::Config::from_flake_url(cmd, &url).await?;
